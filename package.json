@@ -37,6 +37,8 @@
     "studio",
     "index.js",
     "cli.js",
+    "example.server.js",
+    "example.config.json",
     "jsreport.config.js"
   ],
   "standard": {
@@ -51,7 +53,9 @@
     }
   },
   "dependencies": {
-    "object-assign": "4.1.1"
+    "npm-install-package": "2.1.0",
+    "object-assign": "4.1.1",
+    "yargs": "6.6.0"
   },
   "devDependencies": {
     "babel-eslint": "7.1.1",
