@@ -1,0 +1,66 @@
+{
+  "name": "jsreport-cli",
+  "version": "0.0.0",
+  "description": "Command line interface for jsreport",
+  "main": "index.js",
+  "bin": {
+    "jsreport": "cli.js"
+  },
+  "scripts": {
+    "test": "mocha test --timeout 5000 && standard",
+    "test:watch": "mocha test --watch",
+    "prepublish": "in-publish && standard || not-in-publish"
+  },
+  "homepage": "https://github.com/jsreport/jsreport-cli",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jsreport/jsreport-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jsreport/jsreport-cli/issues"
+  },
+  "license": "MIT",
+  "keywords": [
+    "jsreport",
+    "cli",
+    "commands",
+    "jsreport commands"
+  ],
+  "author": "BJR Matos <bjrmatos@gmail.com> (https://github.com/bjrmatos)",
+  "contributors": [
+    "BJR Matos <bjrmatos@gmail.com> (https://github.com/bjrmatos)",
+    "Jan Blaha"
+  ],
+  "files": [
+    "lib",
+    "shared",
+    "studio",
+    "index.js",
+    "cli.js",
+    "jsreport.config.js"
+  ],
+  "standard": {
+    "ignore": [
+      "main.js"
+    ],
+    "parser": "babel-eslint",
+    "env": {
+      "node": true,
+      "mocha": true,
+      "browser": true
+    }
+  },
+  "dependencies": {
+    "object-assign": "4.1.1"
+  },
+  "devDependencies": {
+    "babel-eslint": "7.1.1",
+    "eslint": "3.14.1",
+    "eslint-plugin-babel": "4.0.1",
+    "in-publish": "2.0.0",
+    "jsreport-core": "1.1.0",
+    "mocha": "3.2.0",
+    "should": "11.2.0",
+    "standard": "8.6.0"
+  }
+}
