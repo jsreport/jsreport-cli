@@ -14,8 +14,8 @@ var commandsToIgnoreEntryPoint = [
   'uninstall'
 ]
 
-var userArgv = yargs(args).option('b', { alias: 'verbose', type: 'boolean' }).argv
-var verboseMode = userArgv.verbose
+var userArgv = yargs(args).argv
+var verboseMode = userArgv.verbose || userArgv.b
 var userPkg
 var cliArgv
 var mainCommandReceived
@@ -43,9 +43,25 @@ var cliHandler = yargs
     .option('b', {
       alias: 'verbose',
       description: 'Enables verbose mode',
-      type: 'boolean'
+      type: 'boolean',
+      global: true
     })
-    .global('b')
+    // we are only declaring the "jsreport" option to allow passing
+    // the jsreport instance as context for other commands,
+    // it is not mean to be used by users, that why it is hidden (description: false)
+    // it needs to be global because we don't know if other command will be .strict() or not
+    // and could cause validation errors
+    .option('jsreport', {
+      alias: '_jsreport_',
+      description: false,
+      global: true,
+      type: 'string', // necessary to don't have any value if option is omitted
+      coerce: function (value) {
+        // a little hack to always have "true" if for some reason the user
+        // tries to use this hidden option
+        return true
+      }
+    })
     .epilog('To show more information about a command, type: $0 <command> -h')
     .strict()
 
@@ -85,7 +101,8 @@ if (!existsPackageJson) {
   // creating a default instance
   jsreportInstance = createDefaultInstance(
     jsreportModuleInfo.name,
-    jsreportModuleInfo.module
+    jsreportModuleInfo.module,
+    verboseMode
   )
 } else {
   userPkg = require(path.join(process.cwd(), './package.json'))
@@ -95,7 +112,8 @@ if (!existsPackageJson) {
     // creating a default instance
     jsreportInstance = createDefaultInstance(
       jsreportModuleInfo.name,
-      jsreportModuleInfo.module
+      jsreportModuleInfo.module,
+      verboseMode
     )
   } else {
     try {
@@ -125,16 +143,32 @@ if (!existsPackageJson) {
   }
 }
 
-// initializing jsreport instance
-jsreportInstance.init().then(function () {
-  // activating CLI
-  cliHandler.parse(args)
-}).catch(function (err) {
-  // error during startup
-  console.log('An error has occurred when trying to initialize jsreport..')
-  console.error(err)
-  process.exit(1)
-})
+if (!jsreportInstance._initialized) {
+  // initializing jsreport instance
+  jsreportInstance.init().then(function () {
+    activateCLIAfterInit(jsreportInstance)
+  }).catch(function (err) {
+    // error during startup
+    console.error('An error has occurred when trying to initialize jsreport..')
+
+    if (err.code === 'EADDRINUSE') {
+      console.error('seems like there is already a server running in port:', err.port)
+    }
+
+    console.error(err)
+    process.exit(1)
+  })
+} else {
+  activateCLIAfterInit(jsreportInstance)
+}
+
+function activateCLIAfterInit (jsreportInstance) {
+  // activating CLI passing the jsreport instance, resolving in next tick to avoid
+  // showing errors of commands in catch handler
+  process.nextTick(function () {
+    cliHandler.parse(args, { jsreport: jsreportInstance })
+  })
+}
 
 function log (msg, force) {
   if (force === true) {
@@ -146,11 +180,16 @@ function log (msg, force) {
   }
 }
 
-function createDefaultInstance (jsreportModuleName, jsreportModuleExport) {
+function createDefaultInstance (jsreportModuleName, jsreportModuleExport, verboseMode) {
   log(
     'no entry point was found, creating a default instance ' +
     'using: require("' + jsreportModuleName + '")()'
   )
+
+  if (jsreportModuleName === 'jsreport' && !verboseMode) {
+    // disable logging when using the jsreport package if verbose mode is not activated
+    return jsreportModuleExport({ logger: { providerName: 'dummy' } })
+  }
 
   return jsreportModuleExport()
 }
