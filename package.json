@@ -53,8 +53,10 @@
     }
   },
   "dependencies": {
+    "is-promise": "2.1.0",
     "npm-install-package": "2.1.0",
     "object-assign": "4.1.1",
+    "once": "1.4.0",
     "path-is-absolute": "1.0.1",
     "yargs": "6.6.0"
   },

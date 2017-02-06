@@ -2,8 +2,10 @@
 
 var path = require('path')
 var fs = require('fs')
-var packageJson = require('./package.json')
+var isPromise = require('is-promise')
+var once = require('once')
 var yargs = require('yargs')
+var packageJson = require('./package.json')
 var args = process.argv.slice(2)
 
 // commands that work without a jsreport entry point
@@ -24,7 +26,7 @@ var existsPackageJson
 var pathToJsreportEntryPoint
 var jsreportModuleInfo
 var jsreportEntryPoint
-var jsreportInstance
+var jsreportEntryPointExport
 
 // lazy initialization of cli handler, commands will be activated when
 // doing cliHandler.parse()
@@ -94,80 +96,146 @@ existsPackageJson = fs.existsSync('package.json')
 jsreportModuleInfo = getJsreportModuleInstalled(existsPackageJson)
 
 if (!jsreportModuleInfo) {
-  return console.log('Couldn\'t find a jsreport intallation necessary to process the command, try to install jsreport first')
+  console.log('Couldn\'t find a jsreport intallation necessary to process the command, try to install jsreport first')
+  return process.exit(1)
 }
 
 if (!existsPackageJson) {
   // creating a default instance
-  jsreportInstance = createDefaultInstance(
+  return handleJsreportInstance(createDefaultInstance(
     jsreportModuleInfo.name,
     jsreportModuleInfo.module,
     verboseMode
-  )
-} else {
-  userPkg = require(path.join(process.cwd(), './package.json'))
-  jsreportEntryPoint = (userPkg.jsreport || {}).entryPoint
+  ))
+}
 
-  if (!jsreportEntryPoint) {
-    // creating a default instance
-    jsreportInstance = createDefaultInstance(
-      jsreportModuleInfo.name,
-      jsreportModuleInfo.module,
-      verboseMode
-    )
-  } else {
-    try {
-      pathToJsreportEntryPoint = path.resolve(process.cwd(), jsreportEntryPoint)
-      jsreportInstance = require(pathToJsreportEntryPoint)
+userPkg = require(path.join(process.cwd(), './package.json'))
+jsreportEntryPoint = (userPkg.jsreport || {}).entryPoint
 
-      if (!isJsreportInstance(jsreportInstance, jsreportModuleInfo.module)) {
-        console.log(
-          'Entry point doesn\'t returns a valid jsreport instance, check file in ' +
-          pathToJsreportEntryPoint
-        )
+if (!jsreportEntryPoint) {
+  // creating a default instance
+  return handleJsreportInstance(createDefaultInstance(
+    jsreportModuleInfo.name,
+    jsreportModuleInfo.module,
+    verboseMode
+  ))
+}
 
-        return
-      }
+try {
+  var entryPointExportResult
+  var resolveInstanceOnce
+  var duplicateResolutionHandler
 
-      log('using jsreport instance found in: ' + pathToJsreportEntryPoint)
-    } catch (e) {
-      if (e.code === 'MODULE_NOT_FOUND') {
-        console.log('Couldn\'t find a jsreport entry point in:', pathToJsreportEntryPoint)
-        return
-      }
+  pathToJsreportEntryPoint = path.resolve(process.cwd(), jsreportEntryPoint)
+  jsreportEntryPointExport = require(pathToJsreportEntryPoint)
 
-      console.log('An error has occurred when trying to find a jsreport instance..')
-      console.error(e)
-      return
+  if (typeof jsreportEntryPointExport === 'function') {
+    resolveInstanceOnce = once(resolveInstance)
+    entryPointExportResult = jsreportEntryPointExport(resolveInstanceOnce)
+
+    // prevents resolving an instance more than once
+    duplicateResolutionHandler = function () {
+      console.log(
+        'jsreport instance is already resolved, are you using promise and callback at the same time? ' +
+        'you should only use one way to resolve the instance from entry point, check file in ' +
+        pathToJsreportEntryPoint
+      )
+
+      return process.exit(1)
     }
+
+    // check if function returns a promise, otherwise just wait until user calls `resolveInstanceOnce`
+    if (isPromise(entryPointExportResult)) {
+      if (resolveInstanceOnce.called) {
+        return duplicateResolutionHandler()
+      }
+
+      entryPointExportResult.then(function (jsreportInstance) {
+        if (resolveInstanceOnce.called) {
+          return duplicateResolutionHandler()
+        }
+
+        if (!isJsreportInstance(jsreportInstance, jsreportModuleInfo.module)) {
+          console.log(
+            'Promise in entry point must resolve to a jsreport instance, check file in ' +
+            pathToJsreportEntryPoint
+          )
+
+          return process.exit(1)
+        }
+
+        resolveInstanceOnce(null, jsreportInstance)
+      }).catch(function (getJsreportInstanceError) {
+        if (resolveInstanceOnce.called) {
+          return duplicateResolutionHandler()
+        }
+
+        resolveInstanceOnce(getJsreportInstanceError)
+      })
+    }
+  } else if (isJsreportInstance(jsreportEntryPointExport, jsreportModuleInfo.module)) {
+    log('using jsreport instance found in: ' + pathToJsreportEntryPoint)
+
+    handleJsreportInstance(jsreportEntryPointExport)
+  } else {
+    console.log(
+      'Entry point must return a valid jsreport instance or a function resolving to a jsreport instance, check file in ' +
+      pathToJsreportEntryPoint
+    )
+
+    process.exit(1)
+  }
+} catch (e) {
+  if (e.code === 'MODULE_NOT_FOUND') {
+    console.log('Couldn\'t find a jsreport entry point in:', pathToJsreportEntryPoint)
+    return process.exit(1)
+  }
+
+  console.log('An error has occurred when trying to find a jsreport instance..')
+  console.error(e)
+  process.exit(1)
+}
+
+
+function handleJsreportInstance (instance) {
+  if (!instance._initialized) {
+    // initializing jsreport instance
+    instance.init().then(function () {
+      activateCLIAfterInit(instance)
+    }).catch(function (err) {
+      // error during startup
+      console.error('An error has occurred when trying to initialize jsreport..')
+
+      if (err.code === 'EADDRINUSE') {
+        console.error('seems like there is already a server running in port:', err.port)
+      }
+
+      console.error(err)
+      process.exit(1)
+    })
+  } else {
+    activateCLIAfterInit(instance)
   }
 }
 
-if (!jsreportInstance._initialized) {
-  // initializing jsreport instance
-  jsreportInstance.init().then(function () {
-    activateCLIAfterInit(jsreportInstance)
-  }).catch(function (err) {
-    // error during startup
-    console.error('An error has occurred when trying to initialize jsreport..')
-
-    if (err.code === 'EADDRINUSE') {
-      console.error('seems like there is already a server running in port:', err.port)
-    }
-
-    console.error(err)
-    process.exit(1)
-  })
-} else {
-  activateCLIAfterInit(jsreportInstance)
-}
-
-function activateCLIAfterInit (jsreportInstance) {
+function activateCLIAfterInit (instance) {
   // activating CLI passing the jsreport instance, resolving in next tick to avoid
   // showing errors of commands in catch handler
   process.nextTick(function () {
-    cliHandler.parse(args, { jsreport: jsreportInstance })
+    cliHandler.parse(args, { jsreport: instance })
   })
+}
+
+function resolveInstance (err, instance) {
+  if (err) {
+    console.log('An error has occurred when trying to find a jsreport instance..')
+    console.error(err)
+    return process.exit(1)
+  }
+
+  log('using jsreport instance resolved from function found in: ' + pathToJsreportEntryPoint)
+
+  handleJsreportInstance(instance)
 }
 
 function log (msg, force) {
