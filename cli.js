@@ -13,7 +13,6 @@ var cli = new Liftoff({
 
 cli.launch({}, initCLI)
 
-
 function initCLI (env) {
   var parseCommands
 
