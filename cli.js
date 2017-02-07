@@ -3,10 +3,14 @@
 var path = require('path')
 var fs = require('fs')
 var isPromise = require('is-promise')
+var isAbsoluteUrl = require('is-absolute-url')
 var once = require('once')
 var yargs = require('yargs')
+var prompt = require('prompt')
 var packageJson = require('./package.json')
 var args = process.argv.slice(2)
+
+var builtInCommands = []
 
 // commands that work without a jsreport entry point
 var commandsToIgnoreEntryPoint = [
@@ -17,6 +21,7 @@ var commandsToIgnoreEntryPoint = [
 ]
 
 var userArgv = yargs(args).argv
+var needsPassword = userArgv.password || userArgv.p
 var verboseMode = userArgv.verbose || userArgv.b
 var userPkg
 var cliArgv
@@ -34,8 +39,18 @@ var cliHandler = yargs
     .version('v', undefined, packageJson.version)
     .usage('Usage: $0 [options] <command> [options]')
     .commandDir('lib/commands', {
-      exclude: function (pathToCommand) {
-        return /^_/.exec(path.basename(pathToCommand))
+      include: function (pathToCommand) {
+        var isCommand = /\.js$/.test(path.basename(pathToCommand))
+        var commandName = path.basename(pathToCommand, '.js')
+
+        isCommand = commandName.indexOf('_') !== 0
+
+        // adding built-in commands to our array
+        if (isCommand) {
+          builtInCommands.push(commandName)
+        }
+
+        return isCommand
       }
     })
     .showHelpOnFail(false)
@@ -46,6 +61,32 @@ var cliHandler = yargs
       alias: 'verbose',
       description: 'Enables verbose mode',
       type: 'boolean',
+      global: true
+    })
+    .option('s', {
+      alias: 'serverUrl',
+      description: 'Specifies a url to a remote jsreport server, that server will be the target of the command (only if command support this mode)',
+      type: 'string',
+      requiresArg: true,
+      global: true,
+      coerce: function (value) {
+        if (!isAbsoluteUrl(value)) {
+          throw new Error('serverUrl option must be a valid absolute url')
+        }
+
+        return value
+      }
+    })
+    .option('u', {
+      alias: 'user',
+      description: 'Specifies a username for authentication against a jsreport server (Use if some command needs authentication information)',
+      type: 'string',
+      requiresArg: true,
+      global: true
+    })
+    .option('p', {
+      alias: 'password',
+      description: 'Specifies a password for authentication against a jsreport server (Use if some command needs authentication information)',
       global: true
     })
     // we are only declaring the "jsreport" option to allow passing
@@ -77,13 +118,44 @@ if (userArgv._.length === 0) {
   }
 }
 
+if (needsPassword) {
+  prompt.start()
+
+  prompt.message = ''
+
+  return prompt.get([{
+    name: 'password',
+    description: 'Password',
+    message: 'Password can\'t be empty',
+    type: 'string',
+    hidden: true,
+    replace: '*',
+    required: true
+  }], function (err, result) {
+    if (err) {
+      console.error('No value for password')
+      return process.exit(1)
+    }
+
+    // delegating the command to the CLI and activating it, we need to
+    // add "coerce" function to "p/password" option to allow set a predefined value
+    return cliHandler.option('p', {
+      coerce: function () {
+        return result.password
+      }
+    }).parse(args)
+  })
+}
+
 // if user has provied a command,
 // check if we should handle jsreport instance initialization first or just
 // delegate the command to cli handler
 mainCommandReceived = userArgv._[0]
 
 commandShouldIgnoreEntryPoint = (
-  commandsToIgnoreEntryPoint.indexOf(mainCommandReceived) !== -1
+  commandsToIgnoreEntryPoint.indexOf(mainCommandReceived) !== -1 ||
+  // if command is built-in and serverUrl option is activated start CLI without entry point
+  (builtInCommands.indexOf(mainCommandReceived) !== 1 && (userArgv.serverUrl || userArgv.s))
 )
 
 if (commandShouldIgnoreEntryPoint) {
