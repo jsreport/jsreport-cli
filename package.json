@@ -1,0 +1,26 @@
+{
+  "name": "silent-spawn",
+  "version": "0.0.1",
+  "description": "Spawn detached process without opening command line on windows",
+  "main": "index.js",
+  "scripts": {
+    "test": "standard"
+  },
+  "keywords": [
+    "spawn"    
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pofider/node-silent-spawn.git"
+  },
+  "files": ["index.js", "WinRun.exe"],
+  "author": "Jan Blaha",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pofider/node-silent-spawn/issues"
+  },
+  "homepage": "https://github.com/pofider/node-silent-spawn#readme",
+  "devDependencies": { 
+    "standard": "8.6.0"
+  }  
+}
