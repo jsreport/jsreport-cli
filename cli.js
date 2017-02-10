@@ -51,5 +51,5 @@ function initCLI (env) {
   parseCommands = require(path.join(path.dirname(env.modulePath), 'lib/parseCommands.js'))
 
   // start parsing
-  parseCommands(process.argv.slice(2))
+  parseCommands(process.argv.slice(2), process.cwd())
 }
