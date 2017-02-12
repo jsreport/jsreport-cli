@@ -54,16 +54,22 @@
   },
   "dependencies": {
     "bluebird": "3.4.7",
+    "ip-address": "5.8.6",
     "is-absolute-url": "2.1.0",
     "is-promise": "2.1.0",
     "jsreport-client": "0.4.1",
     "liftoff": "2.3.0",
+    "map-async": "0.1.1",
     "npm-install-package": "2.1.0",
+    "nssocket": "0.6.0",
     "object-assign": "4.1.1",
     "once": "1.4.0",
+    "os-homedir": "1.0.2",
     "path-is-absolute": "1.0.1",
     "prompt": "1.0.0",
     "semver": "5.3.0",
+    "shortid": "2.2.6",
+    "silent-spawn": "0.1.0",
     "yargs": "6.6.0"
   },
   "devDependencies": {
