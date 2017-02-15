@@ -12,10 +12,10 @@ namespace WinRun
     {
         static void Main(string[] args)
         {
-            // There were already an unsucessfull attemp to implement full stdin forwarding 
+            // There were already an unsucessfull attemp to implement full stdin forwarding
             // between node and .net process, this stored here
             // https://github.com/pofider/node-silent-spawn/pull/1
-            
+
 
             Process process = new Process();
             process.StartInfo.FileName = args[0];
@@ -30,13 +30,25 @@ namespace WinRun
             process.OutputDataReceived += new DataReceivedEventHandler(StdOutHandler);
             process.ErrorDataReceived += new DataReceivedEventHandler(StdErrHandler);
 
+            // attach exit event handler in current process to exit child process accordingly,
+            // using "delegate" to allow sharing the child process with the event handler
+            AppDomain.CurrentDomain.ProcessExit += delegate(object sender, EventArgs e) {
+                currentProcess_Exit(sender, e, process);
+            };
+
             process.Start();
 
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
-            
+
             // wait until the associated process terminates
             process.WaitForExit();
+        }
+
+        static void currentProcess_Exit(object sender, EventArgs e, Process child) {
+            if (!child.HasExited) {
+                child.Kill();
+            }
         }
 
         static void StdOutHandler(object sendingProcess, DataReceivedEventArgs outLine) {
