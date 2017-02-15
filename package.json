@@ -1,6 +1,6 @@
 {
   "name": "silent-spawn",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Spawn detached process without opening command line on windows",
   "main": "index.js",
   "scripts": {
