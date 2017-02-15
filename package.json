@@ -7,20 +7,26 @@
     "test": "standard"
   },
   "keywords": [
-    "spawn"    
+    "spawn"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pofider/node-silent-spawn.git"
   },
-  "files": ["index.js", "WinRun.exe"],
+  "files": [
+    "index.js",
+    "WinRun.exe"
+  ],
   "author": "Jan Blaha",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/pofider/node-silent-spawn/issues"
   },
   "homepage": "https://github.com/pofider/node-silent-spawn#readme",
-  "devDependencies": { 
+  "devDependencies": {
     "standard": "8.6.0"
-  }  
+  },
+  "dependencies": {
+    "object-assign": "4.1.1"
+  }
 }
