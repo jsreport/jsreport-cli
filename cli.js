@@ -9,8 +9,6 @@ var init = require('./lib/commands/init')
 var repair = require('./lib/commands/repair')
 var cliPackageJson = require('./package.json')
 
-var COMMANDS_AVAILABLE_GLOBALLY = ['init', 'repair']
-
 var cli = new Liftoff({
   processTitle: 'jsreport',
   moduleName: 'jsreport-cli',
