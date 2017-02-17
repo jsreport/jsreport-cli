@@ -122,6 +122,7 @@ describe('uninstall command', function () {
             cwd: dir
           }, function (error, stdout) {
             if (error) {
+              should(serviceInfo.serviceName).be.eql('jsreport-server-for-uninstall')
               return done()
             }
 

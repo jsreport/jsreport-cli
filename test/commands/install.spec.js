@@ -141,6 +141,8 @@ describe('install command', function () {
           should(serviceInfo.installed).be.eql(true)
           should(serviceInfo.serviceName).be.eql('jsreport-server-for-cli-testing')
 
+          console.log('uninstalling service "' + serviceInfo.serviceName + '" after test case has finished..')
+
           childProcess.exec('sc stop "' + serviceInfo.serviceName + '"', {
             cwd: dir
           }, function () {
