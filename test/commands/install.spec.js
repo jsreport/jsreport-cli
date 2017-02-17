@@ -16,6 +16,10 @@ var TEMP_DIRS = [
 ]
 
 describe('install command', function () {
+  // disabling timeout because removing files could take a
+  // couple of seconds
+  this.timeout(0)
+
   before(function () {
     utils.cleanTempDir(TEMP_DIRS)
 
@@ -44,7 +48,7 @@ describe('install command', function () {
           fs.writeFileSync(
             path.join(absoluteDir, './package.json'),
             JSON.stringify({
-              name: 'jsreport-server',
+              name: 'jsreport-server-for-cli-testing',
               main: 'server.js',
               dependencies: {
                 jsreport: '*'
@@ -66,7 +70,7 @@ describe('install command', function () {
     var installAsync = install({ context: { cwd: dir } })
 
     if (!IS_WINDOWS) {
-      should(installAsync).be.fulfilledWith(false)
+      should(installAsync).be.fulfilledWith({ installed: false })
     } else {
       should(installAsync).be.rejected()
     }
@@ -77,7 +81,7 @@ describe('install command', function () {
     var installAsync = install({ context: { cwd: dir } })
 
     if (!IS_WINDOWS) {
-      should(installAsync).be.fulfilledWith(false)
+      should(installAsync).be.fulfilledWith({ installed: false })
     } else {
       should(installAsync).be.rejected()
     }
@@ -88,7 +92,7 @@ describe('install command', function () {
     var installAsync = install({ context: { cwd: dir } })
 
     if (!IS_WINDOWS) {
-      should(installAsync).be.fulfilledWith(false)
+      should(installAsync).be.fulfilledWith({ installed: false })
     } else {
       should(installAsync).be.rejected()
     }
@@ -113,20 +117,36 @@ describe('install command', function () {
 
       installAsync = install({ context: { cwd: dir } })
 
-      installAsync.then(function (serviceInstalled) {
+      installAsync.then(function (serviceInfo) {
         if (!IS_WINDOWS) {
-          return should(serviceInstalled).be.eql(false)
+          return should(serviceInfo.installed).be.eql(false)
         }
 
-        childProcess.exec('sc query "jsreport-server" | find "RUNNING"', {
+        childProcess.exec('sc query "' + serviceInfo.serviceName + '"', {
           cwd: dir
-        }, function (error) {
+        }, function (error, stdout) {
           if (error) {
             return done(error)
           }
 
-          should(serviceInstalled).be.eql(true)
-          done()
+          if (stdout) {
+            should(stdout.indexOf('RUNNING') !== -1).be.eql(true)
+          } else {
+            throw new Error('Can\' detect is service is running or not')
+          }
+
+          should(serviceInfo.installed).be.eql(true)
+          should(serviceInfo.serviceName).be.eql('jsreport-server-for-cli-testing')
+
+          childProcess.exec('sc stop "' + serviceInfo.serviceName + '"', {
+            cwd: dir
+          }, function () {
+            childProcess.exec('sc delete "' + serviceInfo.serviceName + '"', {
+              cwd: dir
+            }, function () {
+              done()
+            })
+          })
         })
       }).catch(done)
     })
