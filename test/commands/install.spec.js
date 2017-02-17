@@ -15,7 +15,7 @@ var TEMP_DIRS = [
   'install-packagejson-ok'
 ]
 
-describe('install command', function () {
+describe.only('install command', function () {
   // disabling timeout because removing files could take a
   // couple of seconds
   this.timeout(0)
@@ -70,7 +70,7 @@ describe('install command', function () {
     var installAsync = install({ context: { cwd: dir } })
 
     if (!IS_WINDOWS) {
-      should(installAsync).be.fulfilledWith({ installed: false })
+      should(installAsync).be.fulfilledWith({ installed: false, serviceName: null })
     } else {
       should(installAsync).be.rejected()
     }
@@ -81,7 +81,7 @@ describe('install command', function () {
     var installAsync = install({ context: { cwd: dir } })
 
     if (!IS_WINDOWS) {
-      should(installAsync).be.fulfilledWith({ installed: false })
+      should(installAsync).be.fulfilledWith({ installed: false, serviceName: null })
     } else {
       should(installAsync).be.rejected()
     }
@@ -92,7 +92,7 @@ describe('install command', function () {
     var installAsync = install({ context: { cwd: dir } })
 
     if (!IS_WINDOWS) {
-      should(installAsync).be.fulfilledWith({ installed: false })
+      should(installAsync).be.fulfilledWith({ installed: false, serviceName: null })
     } else {
       should(installAsync).be.rejected()
     }
