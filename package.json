@@ -78,7 +78,9 @@
     "eslint-plugin-babel": "4.0.1",
     "in-publish": "2.0.0",
     "jsreport-core": "1.1.0",
+    "mkdirp": "0.5.1",
     "mocha": "3.2.0",
+    "rimraf": "2.5.4",
     "should": "11.2.0",
     "standard": "8.6.0"
   },
