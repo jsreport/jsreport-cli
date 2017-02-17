@@ -1,8 +1,7 @@
 var path = require('path')
 var fs = require('fs')
 var should = require('should')
-var mkdirp = require('mkdirp')
-var rimraf = require('rimraf')
+var utils = require('./utils')
 var init = require('../lib/commands/init').handler
 
 var TEMP_DIRS = [
@@ -13,100 +12,80 @@ var TEMP_DIRS = [
   'init-packagejson-with-prodconfig'
 ]
 
-function getTempDir (dir) {
-  return path.join(__dirname, 'temp', dir)
-}
-
-function createTempDir () {
-  TEMP_DIRS.forEach(function (dir) {
-    var absoluteDir = getTempDir(dir)
-
-    mkdirp.sync(absoluteDir)
-
-    switch (dir) {
-      case 'init-packagejson-only':
-        fs.writeFileSync(
-          path.join(absoluteDir, './package.json'),
-          JSON.stringify({
-            name: 'packagejson-only',
-            dependencies: {
-              jsreport: '*'
-            }
-          }, null, 2)
-        )
-        return
-
-      case 'init-packagejson-with-server':
-        fs.writeFileSync(
-          path.join(absoluteDir, './package.json'),
-          JSON.stringify({
-            name: 'packagejson-with-server',
-            dependencies: {
-              jsreport: '*'
-            }
-          }, null, 2)
-        )
-
-        fs.writeFileSync(
-          path.join(absoluteDir, './server.js'),
-          'require("jsreport")().init()'
-        )
-        return
-
-      case 'init-packagejson-with-devconfig':
-        fs.writeFileSync(
-          path.join(absoluteDir, './package.json'),
-          JSON.stringify({
-            name: 'devconfig',
-            dependencies: {
-              jsreport: '*'
-            }
-          }, null, 2)
-        )
-
-        fs.writeFileSync(
-          path.join(absoluteDir, './dev.config.json'),
-          '{"connectionString": { "name": "fs" }}'
-        )
-        return
-
-      case 'init-packagejson-with-prodconfig':
-        fs.writeFileSync(
-          path.join(absoluteDir, './package.json'),
-          JSON.stringify({
-            name: 'prodconfig',
-            dependencies: {
-              jsreport: '*'
-            }
-          }, null, 2)
-        )
-
-        fs.writeFileSync(
-          path.join(absoluteDir, './prod.config.json'),
-          '{"connectionString": { "name": "fs" }}'
-        )
-        return
-    }
-  })
-}
-
-function cleanTempDir () {
-  try {
-    TEMP_DIRS.forEach(function (dir) {
-      rimraf.sync(getTempDir(dir))
-    })
-  } catch (e) {}
-}
-
 describe('init command', function () {
   // disabling timeout because removing files could take a
   // couple of seconds
   this.timeout(0)
 
   before(function () {
-    cleanTempDir()
+    utils.cleanTempDir(TEMP_DIRS)
 
-    createTempDir()
+    utils.createTempDir(TEMP_DIRS, function (dir, absoluteDir) {
+      switch (dir) {
+        case 'init-packagejson-only':
+          fs.writeFileSync(
+            path.join(absoluteDir, './package.json'),
+            JSON.stringify({
+              name: 'packagejson-only',
+              dependencies: {
+                jsreport: '*'
+              }
+            }, null, 2)
+          )
+          return
+
+        case 'init-packagejson-with-server':
+          fs.writeFileSync(
+            path.join(absoluteDir, './package.json'),
+            JSON.stringify({
+              name: 'packagejson-with-server',
+              dependencies: {
+                jsreport: '*'
+              }
+            }, null, 2)
+          )
+
+          fs.writeFileSync(
+            path.join(absoluteDir, './server.js'),
+            'require("jsreport")().init()'
+          )
+          return
+
+        case 'init-packagejson-with-devconfig':
+          fs.writeFileSync(
+            path.join(absoluteDir, './package.json'),
+            JSON.stringify({
+              name: 'devconfig',
+              dependencies: {
+                jsreport: '*'
+              }
+            }, null, 2)
+          )
+
+          fs.writeFileSync(
+            path.join(absoluteDir, './dev.config.json'),
+            '{"connectionString": { "name": "fs" }}'
+          )
+          return
+
+        case 'init-packagejson-with-prodconfig':
+          fs.writeFileSync(
+            path.join(absoluteDir, './package.json'),
+            JSON.stringify({
+              name: 'prodconfig',
+              dependencies: {
+                jsreport: '*'
+              }
+            }, null, 2)
+          )
+
+          fs.writeFileSync(
+            path.join(absoluteDir, './prod.config.json'),
+            '{"connectionString": { "name": "fs" }}'
+          )
+          return
+      }
+    })
   })
 
   it('should initialize an empty directory', function () {
@@ -114,7 +93,7 @@ describe('init command', function () {
     // couple of minutes
     this.timeout(0)
 
-    var dir = getTempDir('init-empty')
+    var dir = utils.getTempDir('init-empty')
 
     return (
       init({ context: { cwd: dir } })
@@ -135,7 +114,7 @@ describe('init command', function () {
     // couple of minutes
     this.timeout(0)
 
-    var dir = getTempDir('init-packagejson-only')
+    var dir = utils.getTempDir('init-packagejson-only')
 
     return (
       init({ context: { cwd: dir } })
@@ -159,7 +138,7 @@ describe('init command', function () {
     // couple of minutes
     this.timeout(0)
 
-    var dir = getTempDir('init-packagejson-with-server')
+    var dir = utils.getTempDir('init-packagejson-with-server')
 
     return (
       init({ context: { cwd: dir } })
@@ -186,7 +165,7 @@ describe('init command', function () {
     // couple of minutes
     this.timeout(0)
 
-    var dir = getTempDir('init-packagejson-with-devconfig')
+    var dir = utils.getTempDir('init-packagejson-with-devconfig')
 
     return (
       init({ context: { cwd: dir } })
@@ -213,7 +192,7 @@ describe('init command', function () {
     // couple of minutes
     this.timeout(0)
 
-    var dir = getTempDir('init-packagejson-with-prodconfig')
+    var dir = utils.getTempDir('init-packagejson-with-prodconfig')
 
     return (
       init({ context: { cwd: dir } })
@@ -236,6 +215,6 @@ describe('init command', function () {
   })
 
   after(function () {
-    cleanTempDir()
+    utils.cleanTempDir(TEMP_DIRS)
   })
 })
