@@ -1,18 +1,20 @@
+'use strict'
+
 var path = require('path')
 var fs = require('fs')
 var should = require('should')
-var utils = require('./utils')
-var repair = require('../lib/commands/repair').handler
+var utils = require('../utils')
+var init = require('../../lib/commands/init').handler
 
 var TEMP_DIRS = [
-  'repair-empty',
-  'repair-packagejson-only',
-  'repair-packagejson-with-server',
-  'repair-packagejson-with-devconfig',
-  'repair-packagejson-with-prodconfig'
+  'init-empty',
+  'init-packagejson-only',
+  'init-packagejson-with-server',
+  'init-packagejson-with-devconfig',
+  'init-packagejson-with-prodconfig'
 ]
 
-describe('repair command', function () {
+describe('init command', function () {
   // disabling timeout because removing files could take a
   // couple of seconds
   this.timeout(0)
@@ -22,7 +24,7 @@ describe('repair command', function () {
 
     utils.createTempDir(TEMP_DIRS, function (dir, absoluteDir) {
       switch (dir) {
-        case 'repair-packagejson-only':
+        case 'init-packagejson-only':
           fs.writeFileSync(
             path.join(absoluteDir, './package.json'),
             JSON.stringify({
@@ -34,7 +36,7 @@ describe('repair command', function () {
           )
           return
 
-        case 'repair-packagejson-with-server':
+        case 'init-packagejson-with-server':
           fs.writeFileSync(
             path.join(absoluteDir, './package.json'),
             JSON.stringify({
@@ -51,7 +53,7 @@ describe('repair command', function () {
           )
           return
 
-        case 'repair-packagejson-with-devconfig':
+        case 'init-packagejson-with-devconfig':
           fs.writeFileSync(
             path.join(absoluteDir, './package.json'),
             JSON.stringify({
@@ -68,7 +70,7 @@ describe('repair command', function () {
           )
           return
 
-        case 'repair-packagejson-with-prodconfig':
+        case 'init-packagejson-with-prodconfig':
           fs.writeFileSync(
             path.join(absoluteDir, './package.json'),
             JSON.stringify({
@@ -88,15 +90,15 @@ describe('repair command', function () {
     })
   })
 
-  it('should work on empty directory', function () {
+  it('should initialize an empty directory', function () {
     // disabling timeout because npm install could take a
     // couple of minutes
     this.timeout(0)
 
-    var dir = utils.getTempDir('repair-empty')
+    var dir = utils.getTempDir('init-empty')
 
     return (
-      repair({ context: { cwd: dir } })
+      init({ context: { cwd: dir } })
       .then(function (jsreportPackage) {
         // should install jsreport package
         should(fs.existsSync(path.join(dir, 'node_modules/' + jsreportPackage.name))).be.eql(true)
@@ -109,107 +111,107 @@ describe('repair command', function () {
     )
   })
 
-  it('should work on a directory that contains only package.json', function () {
+  it('should initialize a directory that contains only package.json', function () {
     // disabling timeout because npm install could take a
     // couple of minutes
     this.timeout(0)
 
-    var dir = utils.getTempDir('repair-packagejson-only')
+    var dir = utils.getTempDir('init-packagejson-only')
 
     return (
-      repair({ context: { cwd: dir } })
+      init({ context: { cwd: dir } })
       .then(function (jsreportPackage) {
         // should generate default files
         should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
         should(fs.existsSync(path.join(dir, 'dev.config.json'))).be.eql(true)
         should(fs.existsSync(path.join(dir, 'prod.config.json'))).be.eql(true)
-        // and replace package.json in dir
+        // but not replace package.json in dir
         should(
           JSON.parse(
             fs.readFileSync(path.join(dir, 'package.json')).toString()
           ).name
-        ).be.eql('jsreport-server')
+        ).be.eql('packagejson-only')
       })
     )
   })
 
-  it('should override server.js file', function () {
+  it('should not override server.js file', function () {
     // disabling timeout because npm install could take a
     // couple of minutes
     this.timeout(0)
 
-    var dir = utils.getTempDir('repair-packagejson-with-server')
+    var dir = utils.getTempDir('init-packagejson-with-server')
 
     return (
-      repair({ context: { cwd: dir } })
+      init({ context: { cwd: dir } })
       .then(function (jsreportPackage) {
         // should generate default files
         should(fs.existsSync(path.join(dir, 'dev.config.json'))).be.eql(true)
         should(fs.existsSync(path.join(dir, 'prod.config.json'))).be.eql(true)
-        // replace package.json in dir
+        // but not replace package.json in dir
         should(
           JSON.parse(
             fs.readFileSync(path.join(dir, 'package.json')).toString()
           ).name
-        ).be.eql('jsreport-server')
-        // and replace server.js
+        ).be.eql('packagejson-with-server')
+        // and not replace server.js
         should(
           fs.readFileSync(path.join(dir, 'server.js')).toString().trim()
-        ).be.not.eql('require("jsreport")().init()')
+        ).be.eql('require("jsreport")().init()')
       })
     )
   })
 
-  it('should override dev.config.json file', function () {
+  it('should not override dev.config.json file', function () {
     // disabling timeout because npm install could take a
     // couple of minutes
     this.timeout(0)
 
-    var dir = utils.getTempDir('repair-packagejson-with-devconfig')
+    var dir = utils.getTempDir('init-packagejson-with-devconfig')
 
     return (
-      repair({ context: { cwd: dir } })
+      init({ context: { cwd: dir } })
       .then(function (jsreportPackage) {
         // should generate default files
         should(fs.existsSync(path.join(dir, 'prod.config.json'))).be.eql(true)
         should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-        // replace package.json in dir
+        // but not replace package.json in dir
         should(
           JSON.parse(
             fs.readFileSync(path.join(dir, 'package.json')).toString()
           ).name
-        ).be.eql('jsreport-server')
-        // and replace dev.config.json
+        ).be.eql('devconfig')
+        // and not replace dev.config.json
         should(
           fs.readFileSync(path.join(dir, 'dev.config.json')).toString().trim()
-        ).be.not.eql('{"connectionString": { "name": "fs" }}')
+        ).be.eql('{"connectionString": { "name": "fs" }}')
       })
     )
   })
 
-  it('should override prod.config.json file', function () {
+  it('should not override prod.config.json file', function () {
     // disabling timeout because npm install could take a
     // couple of minutes
     this.timeout(0)
 
-    var dir = utils.getTempDir('repair-packagejson-with-prodconfig')
+    var dir = utils.getTempDir('init-packagejson-with-prodconfig')
 
     return (
-      repair({ context: { cwd: dir } })
+      init({ context: { cwd: dir } })
       .then(function (jsreportPackage) {
         // should generate default files
         should(fs.existsSync(path.join(dir, 'dev.config.json'))).be.eql(true)
         should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-        // replace package.json in dir
+        // but not replace package.json in dir
         should(
           JSON.parse(
             fs.readFileSync(path.join(dir, 'package.json')).toString()
           ).name
-        ).be.eql('jsreport-server')
-        // and replace prod.config.json
+        ).be.eql('prodconfig')
+        // and not replace prod.config.json
         should(
           fs.readFileSync(path.join(dir, 'prod.config.json')).toString().trim()
-        ).be.not.eql('{"connectionString": { "name": "fs" }}')
+        ).be.eql('{"connectionString": { "name": "fs" }}')
       })
     )
   })

@@ -7,8 +7,8 @@
     "jsreport": "cli.js"
   },
   "scripts": {
-    "test": "mocha test --timeout 5000 && standard",
-    "test:watch": "mocha test --watch",
+    "test": "mocha ./test/**/*.spec.js --timeout 5000 && standard",
+    "test:watch": "mocha ./test/**/*.spec.js --timeout 5000 --watch",
     "prepublish": "in-publish && standard || not-in-publish"
   },
   "homepage": "https://github.com/jsreport/jsreport-cli",
