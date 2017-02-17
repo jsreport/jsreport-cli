@@ -12,10 +12,11 @@ var IS_WINDOWS = process.platform === 'win32'
 var TEMP_DIRS = [
   'install-empty',
   'install-packagejson-only',
+  'install-packagejson-without-entry',
   'install-packagejson-ok'
 ]
 
-describe.only('install command', function () {
+describe('install command', function () {
   // disabling timeout because removing files could take a
   // couple of seconds
   this.timeout(0)
@@ -58,7 +59,7 @@ describe.only('install command', function () {
 
           fs.writeFileSync(
             path.join(absoluteDir, './server.js'),
-            'require("jsreport")().init().catch(function(err) { console.error("Error starting jsreport:", err) })'
+            'require("jsreport")().init().catch(function(err) { console.error("Error starting jsreport:", err); process.exit(1); })'
           )
           return
       }
@@ -117,9 +118,11 @@ describe.only('install command', function () {
 
       installAsync = install({ context: { cwd: dir } })
 
-      installAsync.then(function (serviceInfo) {
+      installAsync
+      .then(function (serviceInfo) {
         if (!IS_WINDOWS) {
-          return should(serviceInfo.installed).be.eql(false)
+          should(serviceInfo.installed).be.eql(false)
+          return done()
         }
 
         childProcess.exec('sc query "' + serviceInfo.serviceName + '"', {
@@ -132,7 +135,7 @@ describe.only('install command', function () {
           if (stdout) {
             should(stdout.indexOf('RUNNING') !== -1).be.eql(true)
           } else {
-            throw new Error('Can\' detect is service is running or not')
+            return done(new Error('Can\' detect is service is running or not'))
           }
 
           should(serviceInfo.installed).be.eql(true)
@@ -148,7 +151,8 @@ describe.only('install command', function () {
             })
           })
         })
-      }).catch(done)
+      })
+      .catch(done)
     })
   })
 
