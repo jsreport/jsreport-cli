@@ -7,8 +7,8 @@
     "jsreport": "cli.js"
   },
   "scripts": {
-    "test": "mocha ./test/**/*.spec.js --timeout 5000 && standard",
-    "test:watch": "mocha ./test/**/*.spec.js --timeout 5000 --watch",
+    "test": "mocha --recursive \"./test/**/*.spec.js\" --timeout 5000 && standard",
+    "test:watch": "mocha --recursive \"./test/**/*.spec.js\" --timeout 5000 --watch",
     "prepublish": "in-publish && standard || not-in-publish"
   },
   "homepage": "https://github.com/jsreport/jsreport-cli",
@@ -82,7 +82,8 @@
     "mocha": "3.2.0",
     "rimraf": "2.5.4",
     "should": "11.2.0",
-    "standard": "8.6.0"
+    "standard": "8.6.0",
+    "std-mocks": "1.0.1"
   },
   "optionalDependencies": {
     "winser": "1.0.2"
