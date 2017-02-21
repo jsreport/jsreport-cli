@@ -3,6 +3,7 @@
 var path = require('path')
 var mkdirp = require('mkdirp')
 var rimraf = require('rimraf')
+var mockProcessExit = require('./mockProcessExit')
 
 function getTempDir (dir) {
   return path.join(__dirname, '../temp', dir)
@@ -29,3 +30,4 @@ function cleanTempDir (dirs) {
 exports.getTempDir = getTempDir
 exports.cleanTempDir = cleanTempDir
 exports.createTempDir = createTempDir
+exports.mockProcessExit = mockProcessExit
