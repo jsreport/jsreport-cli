@@ -763,12 +763,7 @@ describe('commander', function () {
 
         fs.writeFileSync(
           path.join(absoluteDir, './package.json'),
-          JSON.stringify({
-            name: 'commander-project',
-            dependencies: {
-              jsreport: '*'
-            }
-          }, null, 2)
+          JSON.stringify(originalPkgJson, null, 2)
         )
 
         fs.writeFileSync(
