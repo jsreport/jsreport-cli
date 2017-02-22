@@ -7,8 +7,8 @@
     "jsreport": "cli.js"
   },
   "scripts": {
-    "test": "mocha --recursive \"./test/**/*.spec.js\" --timeout 5000 && standard",
-    "test:watch": "mocha --recursive \"./test/**/*.spec.js\" --timeout 5000 --watch",
+    "test": "mocha --recursive \"./test/**/*.spec.js\" --timeout 7000 && standard",
+    "test:watch": "mocha --recursive \"./test/**/*.spec.js\" --timeout 7000 --watch",
     "prepublish": "in-publish && standard || not-in-publish"
   },
   "homepage": "https://github.com/jsreport/jsreport-cli",
