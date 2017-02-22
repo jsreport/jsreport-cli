@@ -57,7 +57,7 @@ describe('render command', function () {
     // couple of seconds
     this.timeout(0)
 
-    // utils.cleanTempDir(['render-project'])
+    utils.cleanTempDir(['render-project'])
 
     utils.createTempDir(['render-project'], function (dir, absoluteDir) {
       pathToTempProject = absoluteDir
@@ -342,7 +342,7 @@ describe('render command', function () {
     // couple of seconds
     this.timeout(0)
 
-    // utils.cleanTempDir(['render-project'])
+    utils.cleanTempDir(['render-project'])
   })
 
   function common (instanceType, remote) {
