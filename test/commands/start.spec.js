@@ -100,8 +100,7 @@ describe('start command', function () {
           cwd: '/invalid/path',
           getInstance: getInstance,
           initInstance: initInstance
-        },
-        verbose: true
+        }
       })
       .then(function () {
         throw new Error('start should have failed')
