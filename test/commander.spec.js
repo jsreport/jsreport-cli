@@ -19,7 +19,7 @@ describe('commander', function () {
       var cli = commander()
 
       should(cli.cwd).be.eql(process.cwd())
-      should(cli.context).be.eql({ cwd: cli.cwd })
+      should(cli.context).be.not.undefined()
       should(cli._showHelpWhenNoCommand).be.eql(true)
       should(cli._commandNames).containDeep(defaultCommands)
       should(cli._commandNames.length).be.eql(defaultCommands.length)
@@ -523,7 +523,7 @@ describe('commander', function () {
           stdMocks.flush()
           exitMock.restore()
           should(argsInEvent).be.eql(cliArgs)
-          should(contextInEvent).be.eql({ cwd: process.cwd() })
+          should(contextInEvent).be.not.undefined()
           done()
         })
       })
@@ -730,6 +730,47 @@ describe('commander', function () {
           should(output.stdout[0].replace(/(?:\r\n|\r|\n)/, '')).be.eql('test async output')
           should(result).be.eql(true)
           should(exitCode).be.eql(0)
+          done()
+        }, 200)
+      })
+
+      stdMocks.use()
+      exitMock.enable()
+
+      cli.start(['test'])
+    })
+
+    it('should pass context to command', function (done) {
+      var cli = commander()
+
+      var testCommand = {
+        command: 'test',
+        description: 'test command desc',
+        handler: function (argv) {
+          return argv.context
+        }
+      }
+
+      cli.registerCommand(testCommand)
+
+      cli.on('command.success', function (cmdName, result) {
+        setTimeout(function () {
+          stdMocks.restore()
+          stdMocks.flush()
+          exitMock.restore()
+
+          should(cmdName).be.eql('test')
+          should(result).be.not.undefined()
+
+          should(result).have.properties([
+            'cwd',
+            'sockPath',
+            'workerSockPath',
+            'disableProcessExit'
+          ])
+
+          should(result.disableProcessExit).be.Function()
+
           done()
         }, 200)
       })
