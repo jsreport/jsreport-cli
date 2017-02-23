@@ -112,7 +112,7 @@ describe('kill command', function () {
             cwd: pathToTempProject,
             workerSockPath: pathToWorkerSocketDir
           },
-          _: [null, 'xXsfrt']
+          _: [null, 'zzzzzzzzzz']
         })
         .then(function () {
           throw new Error('kill should have failed')
@@ -154,7 +154,7 @@ describe('kill command', function () {
         })
         .then(function (result) {
           should(result).not.be.undefined()
-          should(result.pid).be.eql(child.pid)
+          should(result.pid).be.eql(childInfo.pid)
         })
       )
     })
@@ -166,11 +166,11 @@ describe('kill command', function () {
             cwd: pathToTempProject,
             workerSockPath: pathToWorkerSocketDir
           },
-          _: [null, child.pid]
+          _: [null, childInfo.pid]
         })
         .then(function (result) {
           should(result).not.be.undefined()
-          should(result.pid).be.eql(child.pid)
+          should(result.pid).be.eql(childInfo.pid)
         })
       )
     })
