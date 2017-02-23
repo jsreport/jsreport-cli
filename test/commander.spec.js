@@ -786,11 +786,8 @@ describe('commander', function () {
           should(result).have.properties([
             'cwd',
             'sockPath',
-            'workerSockPath',
-            'disableProcessExit'
+            'workerSockPath'
           ])
-
-          should(result.disableProcessExit).be.Function()
 
           done()
         }, 200)
