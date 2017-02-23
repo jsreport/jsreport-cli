@@ -413,22 +413,25 @@ describe('commander', function () {
       }).throw()
     })
 
-    it('should print help by default when command is not present', function () {
+    it('should print help by default when command is not present', function (done) {
       var cli = commander()
       var helpPrinted = false
 
       stdMocks.use()
 
+      cli.on('parsed', function () {
+        process.nextTick(function () {
+          stdMocks.restore()
+          helpPrinted = stdMocks.flush().stderr.join('\n').indexOf('Commands:') !== -1
+          should(helpPrinted).be.eql(true)
+          done()
+        })
+      })
+
       cli.start([])
-
-      stdMocks.restore()
-
-      helpPrinted = stdMocks.flush().stderr.join('\n').indexOf('Commands:') !== -1
-
-      should(helpPrinted).be.eql(true)
     })
 
-    it('should not print help when using `showHelpWhenNoCommand` option and command is not present', function () {
+    it('should not print help when using `showHelpWhenNoCommand` option and command is not present', function (done) {
       var cli = commander(process.cwd(), {
         showHelpWhenNoCommand: false
       })
@@ -437,73 +440,91 @@ describe('commander', function () {
 
       stdMocks.use()
 
+      cli.on('parsed', function () {
+        process.nextTick(function () {
+          stdMocks.restore()
+          output = stdMocks.flush()
+
+          should(output.stdout.length).be.eql(0)
+          should(output.stderr.length).be.eql(0)
+          done()
+        })
+      })
+
       cli.start([])
-
-      stdMocks.restore()
-
-      output = stdMocks.flush()
-
-      should(output.stdout.length).be.eql(0)
-      should(output.stderr.length).be.eql(0)
     })
 
-    it('should handle --help option by default', function () {
+    it('should handle --help option by default', function (done) {
       var cli = commander()
       var helpPrinted = false
 
       stdMocks.use()
       exitMock.enable()
 
+      cli.on('parsed', function () {
+        process.nextTick(function () {
+          stdMocks.restore()
+          exitMock.restore()
+
+          helpPrinted = stdMocks.flush().stdout.join('\n').indexOf('Commands:') !== -1
+
+          should(helpPrinted).be.eql(true)
+          done()
+        })
+      })
+
       cli.start(['--help'])
-
-      stdMocks.restore()
-      exitMock.restore()
-
-      helpPrinted = stdMocks.flush().stdout.join('\n').indexOf('Commands:') !== -1
-
-      should(helpPrinted).be.eql(true)
     })
 
-    it('should handle --version option by default', function () {
+    it('should handle --version option by default', function (done) {
       var cli = commander()
       var versionPrinted
 
       stdMocks.use()
       exitMock.enable()
 
+      cli.on('parsed', function () {
+        process.nextTick(function () {
+          stdMocks.restore()
+          exitMock.restore()
+
+          versionPrinted = stdMocks.flush().stdout[0]
+
+          should(versionPrinted.indexOf(pkg.version) !== -1).be.eql(true)
+          done()
+        })
+      })
+
       cli.start(['--version'])
-
-      stdMocks.restore()
-      exitMock.restore()
-
-      versionPrinted = stdMocks.flush().stdout[0].replace(/(?:\r\n|\r|\n)/, '')
-
-      should(versionPrinted).be.eql(pkg.version)
     })
 
     it('should emit start events', function (done) {
       var cli = commander()
       var startingCalled = false
+      var startedCalled = false
 
       cli.on('starting', function () {
         startingCalled = true
       })
 
-      cli.on('started', function (error, startInfo) {
+      cli.on('started', function () {
+        startedCalled = true
+      })
+
+      cli.on('parsed', function () {
         process.nextTick(function () {
           stdMocks.restore()
           stdMocks.flush()
 
-          should(error).be.eql(null)
-          should(startInfo.handled).be.eql(true)
           should(startingCalled).be.eql(true)
+          should(startedCalled).be.eql(true)
           done()
         })
       })
 
       stdMocks.use()
 
-      cli.start(['--version'])
+      cli.start([])
     })
 
     it('should emit parse events', function (done) {
