@@ -1,4 +1,5 @@
 var assign = require('object-assign')
+var commander = require('./lib/commander')
 var main = require('./lib/cliExtension')
 var config = require('./jsreport.config')
 
@@ -11,3 +12,5 @@ module.exports = function (options) {
 
   return newConfig
 }
+
+module.exports.commander = commander
