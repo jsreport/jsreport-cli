@@ -8,6 +8,7 @@ var repair = require('../../lib/commands/repair').handler
 
 var TEMP_DIRS = [
   'repair-empty',
+  'repair-with-specific-version',
   'repair-packagejson-only',
   'repair-packagejson-with-server',
   'repair-packagejson-with-devconfig',
@@ -107,6 +108,32 @@ describe('repair command', function () {
         should(fs.existsSync(path.join(dir, 'dev.config.json'))).be.eql(true)
         should(fs.existsSync(path.join(dir, 'prod.config.json'))).be.eql(true)
         should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
+      })
+    )
+  })
+
+  it('should work with specific jsreport version', function () {
+    // disabling timeout because npm install could take a
+    // couple of minutes
+    this.timeout(0)
+
+    var dir = utils.getTempDir('repair-with-specific-version')
+    var versionToInstall = '1.3.0'
+
+    return (
+      repair({ context: { cwd: dir }, _: [null, versionToInstall] })
+      .then(function (jsreportPackage) {
+        // should install jsreport package
+        should(fs.existsSync(path.join(dir, 'node_modules/' + jsreportPackage.name))).be.eql(true)
+        // and generate default files
+        should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
+        should(fs.existsSync(path.join(dir, 'dev.config.json'))).be.eql(true)
+        should(fs.existsSync(path.join(dir, 'prod.config.json'))).be.eql(true)
+        should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
+
+        should(JSON.parse(
+          fs.readFileSync(path.join(dir, 'package.json')).toString()
+        ).dependencies.jsreport).endWith(versionToInstall)
       })
     )
   })

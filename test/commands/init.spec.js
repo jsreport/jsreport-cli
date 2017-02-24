@@ -8,6 +8,7 @@ var init = require('../../lib/commands/init').handler
 
 var TEMP_DIRS = [
   'init-empty',
+  'init-with-specific-version',
   'init-packagejson-only',
   'init-packagejson-with-server',
   'init-packagejson-with-devconfig',
@@ -107,6 +108,32 @@ describe('init command', function () {
         should(fs.existsSync(path.join(dir, 'dev.config.json'))).be.eql(true)
         should(fs.existsSync(path.join(dir, 'prod.config.json'))).be.eql(true)
         should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
+      })
+    )
+  })
+
+  it('should initialize with a specific jsreport version', function () {
+    // disabling timeout because npm install could take a
+    // couple of minutes
+    this.timeout(0)
+
+    var dir = utils.getTempDir('init-with-specific-version')
+    var versionToInstall = '1.3.0'
+
+    return (
+      init({ context: { cwd: dir }, _: [null, versionToInstall] })
+      .then(function (jsreportPackage) {
+        // should install jsreport package
+        should(fs.existsSync(path.join(dir, 'node_modules/' + jsreportPackage.name))).be.eql(true)
+        // and generate default files
+        should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
+        should(fs.existsSync(path.join(dir, 'dev.config.json'))).be.eql(true)
+        should(fs.existsSync(path.join(dir, 'prod.config.json'))).be.eql(true)
+        should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
+
+        should(JSON.parse(
+          fs.readFileSync(path.join(dir, 'package.json')).toString()
+        ).dependencies.jsreport).endWith(versionToInstall)
       })
     )
   })
