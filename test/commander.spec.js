@@ -31,6 +31,51 @@ describe('commander', function () {
 
       cli.on('initialized', done)
     })
+
+    it('should have a method to get registered commands', function () {
+      var cli = commander()
+
+      should(cli.getCommands()).be.Array()
+      should(cli.getCommands().length).be.above(0)
+    })
+
+    it('should have an option to register built-in commands', function () {
+      var commands
+      var cli
+
+      commands = [{
+        command: 'push',
+        description: 'push command',
+        handler: function () {}
+      }, {
+        command: 'pull',
+        description: 'pull command',
+        handler: function () {}
+      }]
+
+      cli = commander(undefined, { builtInCommands: commands })
+
+      should(cli.getCommands()).be.eql(['push', 'pull'])
+    })
+
+    it('should have an option to disable commands', function () {
+      var commands
+      var cli
+
+      commands = [{
+        command: 'push',
+        description: 'push command',
+        handler: function () {}
+      }, {
+        command: 'pull',
+        description: 'pull command',
+        handler: function () {}
+      }]
+
+      cli = commander(undefined, { builtInCommands: commands, disabledCommands: ['push'] })
+
+      should(cli.getCommands()).be.eql(['pull'])
+    })
   })
 
   describe('when registering command', function () {
