@@ -5,17 +5,17 @@ var fs = require('fs')
 var childProcess = require('child_process')
 var should = require('should')
 var utils = require('../utils')
-var uninstall = require('../../lib/commands/uninstall').handler
+var winUninstall = require('../../lib/commands/win-uninstall').handler
 
 var IS_WINDOWS = process.platform === 'win32'
 
 var TEMP_DIRS = [
-  'uninstall-empty',
-  'uninstall-packagejson-only',
-  'uninstall-packagejson-ok'
+  'win-uninstall-empty',
+  'win-uninstall-packagejson-only',
+  'win-uninstall-packagejson-ok'
 ]
 
-describe('uninstall command', function () {
+describe('win-uninstall command', function () {
   // disabling timeout because removing files could take a
   // couple of seconds
   this.timeout(0)
@@ -25,7 +25,7 @@ describe('uninstall command', function () {
 
     utils.createTempDir(TEMP_DIRS, function (dir, absoluteDir) {
       switch (dir) {
-        case 'uninstall-packagejson-only':
+        case 'win-uninstall-packagejson-only':
           fs.writeFileSync(
             path.join(absoluteDir, './package.json'),
             JSON.stringify({
@@ -34,7 +34,7 @@ describe('uninstall command', function () {
           )
           return
 
-        case 'uninstall-packagejson-ok':
+        case 'win-uninstall-packagejson-ok':
           fs.writeFileSync(
             path.join(absoluteDir, './package.json'),
             JSON.stringify({
@@ -56,8 +56,8 @@ describe('uninstall command', function () {
   })
 
   it('should not work on empty directory', function () {
-    var dir = utils.getTempDir('uninstall-empty')
-    var uninstallAsync = uninstall({ context: { cwd: dir } })
+    var dir = utils.getTempDir('win-uninstall-empty')
+    var uninstallAsync = winUninstall({ context: { cwd: dir } })
 
     if (!IS_WINDOWS) {
       should(uninstallAsync).be.fulfilledWith({ uninstalled: false, serviceName: null })
@@ -67,8 +67,8 @@ describe('uninstall command', function () {
   })
 
   it('should not work on directory with package.json without name field', function () {
-    var dir = utils.getTempDir('uninstall-packagejson-only')
-    var uninstallAsync = uninstall({ context: { cwd: dir } })
+    var dir = utils.getTempDir('win-uninstall-packagejson-only')
+    var uninstallAsync = winUninstall({ context: { cwd: dir } })
 
     if (!IS_WINDOWS) {
       should(uninstallAsync).be.fulfilledWith({ uninstalled: false, serviceName: null })
@@ -82,7 +82,7 @@ describe('uninstall command', function () {
     // couple of minutes
     this.timeout(0)
 
-    var dir = utils.getTempDir('uninstall-packagejson-ok')
+    var dir = utils.getTempDir('win-uninstall-packagejson-ok')
     var uninstallAsync
 
     if (!IS_WINDOWS) {
@@ -109,7 +109,7 @@ describe('uninstall command', function () {
           return done(error)
         }
 
-        uninstallAsync = uninstall({ context: { cwd: dir } })
+        uninstallAsync = winUninstall({ context: { cwd: dir } })
 
         uninstallAsync
         .then(function (serviceInfo) {

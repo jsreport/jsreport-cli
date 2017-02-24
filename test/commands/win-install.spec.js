@@ -5,18 +5,18 @@ var fs = require('fs')
 var childProcess = require('child_process')
 var should = require('should')
 var utils = require('../utils')
-var install = require('../../lib/commands/install').handler
+var winInstall = require('../../lib/commands/win-install').handler
 
 var IS_WINDOWS = process.platform === 'win32'
 
 var TEMP_DIRS = [
-  'install-empty',
-  'install-packagejson-only',
-  'install-packagejson-without-entry',
-  'install-packagejson-ok'
+  'win-install-empty',
+  'win-install-packagejson-only',
+  'win-install-packagejson-without-entry',
+  'win-install-packagejson-ok'
 ]
 
-describe('install command', function () {
+describe('win-install command', function () {
   // disabling timeout because removing files could take a
   // couple of seconds
   this.timeout(0)
@@ -26,7 +26,7 @@ describe('install command', function () {
 
     utils.createTempDir(TEMP_DIRS, function (dir, absoluteDir) {
       switch (dir) {
-        case 'install-packagejson-only':
+        case 'win-install-packagejson-only':
           fs.writeFileSync(
             path.join(absoluteDir, './package.json'),
             JSON.stringify({
@@ -35,7 +35,7 @@ describe('install command', function () {
           )
           return
 
-        case 'install-packagejson-without-entry':
+        case 'win-install-packagejson-without-entry':
           fs.writeFileSync(
             path.join(absoluteDir, './package.json'),
             JSON.stringify({
@@ -45,7 +45,7 @@ describe('install command', function () {
 
           return
 
-        case 'install-packagejson-ok':
+        case 'win-install-packagejson-ok':
           fs.writeFileSync(
             path.join(absoluteDir, './package.json'),
             JSON.stringify({
@@ -67,8 +67,8 @@ describe('install command', function () {
   })
 
   it('should not work on empty directory', function () {
-    var dir = utils.getTempDir('install-empty')
-    var installAsync = install({ context: { cwd: dir } })
+    var dir = utils.getTempDir('win-install-empty')
+    var installAsync = winInstall({ context: { cwd: dir } })
 
     if (!IS_WINDOWS) {
       should(installAsync).be.fulfilledWith({ installed: false, serviceName: null })
@@ -78,8 +78,8 @@ describe('install command', function () {
   })
 
   it('should not work on directory with package.json without name field', function () {
-    var dir = utils.getTempDir('install-packagejson-only')
-    var installAsync = install({ context: { cwd: dir } })
+    var dir = utils.getTempDir('win-install-packagejson-only')
+    var installAsync = winInstall({ context: { cwd: dir } })
 
     if (!IS_WINDOWS) {
       should(installAsync).be.fulfilledWith({ installed: false, serviceName: null })
@@ -89,8 +89,8 @@ describe('install command', function () {
   })
 
   it('should not work on directory with package.json without main or scripts field', function () {
-    var dir = utils.getTempDir('install-packagejson-without-entry')
-    var installAsync = install({ context: { cwd: dir } })
+    var dir = utils.getTempDir('win-install-packagejson-without-entry')
+    var installAsync = winInstall({ context: { cwd: dir } })
 
     if (!IS_WINDOWS) {
       should(installAsync).be.fulfilledWith({ installed: false, serviceName: null })
@@ -104,7 +104,7 @@ describe('install command', function () {
     // couple of minutes
     this.timeout(0)
 
-    var dir = utils.getTempDir('install-packagejson-ok')
+    var dir = utils.getTempDir('win-install-packagejson-ok')
     var installAsync
 
     console.log('installing jsreport for the test case...')
@@ -116,7 +116,7 @@ describe('install command', function () {
         return done(error)
       }
 
-      installAsync = install({ context: { cwd: dir } })
+      installAsync = winInstall({ context: { cwd: dir } })
 
       installAsync
       .then(function (serviceInfo) {
