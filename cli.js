@@ -3,7 +3,6 @@
 var path = require('path')
 var semver = require('semver')
 var Liftoff = require('liftoff')
-var createCommandParser = require('./lib/createCommandParser')
 var commander = require('./lib/commander')
 var init = require('./lib/commands/init')
 var repair = require('./lib/commands/repair')
@@ -27,8 +26,7 @@ function initCLI (env) {
     // try to detect if some global command was specified
     var globalCliHandler = commander(cwd, {
       builtInCommands: [init, repair],
-      ignoreEntryPointCommands: ['init', 'repair'],
-      cli: createCommandParser()
+      ignoreEntryPointCommands: ['init', 'repair']
     })
 
     globalCliHandler.on('started', function (err, info) {
