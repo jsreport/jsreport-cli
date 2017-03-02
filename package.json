@@ -54,7 +54,6 @@
   },
   "dependencies": {
     "bluebird": "3.4.7",
-    "get-port": "2.1.0",
     "inquirer": "1.2.3",
     "ip-address": "5.8.6",
     "is-absolute-url": "2.1.0",
