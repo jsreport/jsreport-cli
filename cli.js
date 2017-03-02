@@ -6,6 +6,7 @@ var Liftoff = require('liftoff')
 var commander = require('./lib/commander')
 var init = require('./lib/commands/init')
 var repair = require('./lib/commands/repair')
+var configure = require('./lib/commands/configure')
 var cliPackageJson = require('./package.json')
 
 var cli = new Liftoff({
@@ -25,8 +26,8 @@ function initCLI (env) {
     // if no local installation is found,
     // try to detect if some global command was specified
     var globalCliHandler = commander(cwd, {
-      builtInCommands: [init, repair],
-      ignoreEntryPointCommands: ['init', 'repair']
+      builtInCommands: [init, repair, configure],
+      ignoreEntryPointCommands: ['init', 'repair', 'configure']
     })
 
     globalCliHandler.on('started', function (err, info) {
