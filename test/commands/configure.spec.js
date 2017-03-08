@@ -73,7 +73,7 @@ describe('configure command', function () {
           timeout: 40000
         },
         'sample-template': {
-          allExamples: false
+          createSamples: false
         }
       })
     })
@@ -125,7 +125,7 @@ describe('configure command', function () {
           timeout: 40000
         },
         'sample-template': {
-          allExamples: false
+          createSamples: false
         }
       }
 
@@ -196,7 +196,7 @@ describe('configure command', function () {
           searchOnDiskIfNotFoundInStore: true
         },
         'sample-template': {
-          allExamples: true
+          createSamples: true
         }
       }
 
@@ -252,7 +252,7 @@ describe('configure command', function () {
           timeout: 40000
         },
         'sample-template': {
-          allExamples: false
+          createSamples: false
         }
       }
 
