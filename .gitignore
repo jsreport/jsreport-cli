@@ -1,5 +1,4 @@
 # Logs
-logs
 *.log
 npm-debug.log*
 
@@ -43,4 +42,8 @@ jspm_packages
 studio/main.js
 studio/main.js.map
 
+# jsreport files
 data
+logs
+dev.config.json
+prod.config.json
