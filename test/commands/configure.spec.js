@@ -50,7 +50,7 @@ describe('configure command', function () {
         },
         blobStorage: 'inMemory',
         logger: {
-          providerName: 'console'
+          console: { transport: 'console', level: 'debug' }
         },
         express: {
           enabled: false
@@ -102,7 +102,7 @@ describe('configure command', function () {
         },
         blobStorage: 'inMemory',
         logger: {
-          providerName: 'console'
+          console: { transport: 'console', level: 'debug' }
         },
         express: {
           enabled: false
@@ -170,7 +170,9 @@ describe('configure command', function () {
         },
         blobStorage: 'fileSystem',
         logger: {
-          providerName: 'winston'
+          console: { transport: 'console', level: 'debug' },
+          main: { transport: 'file', level: 'info', filename: 'reporter.log' },
+          error: { transport: 'file', level: 'error', filename: 'error.log' }
         },
         phantom: {
           allowLocalFilesAccess: true,
@@ -229,7 +231,7 @@ describe('configure command', function () {
         },
         blobStorage: 'inMemory',
         logger: {
-          providerName: 'console'
+          console: { transport: 'console', level: 'debug' }
         },
         express: {
           enabled: false
