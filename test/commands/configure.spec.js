@@ -171,7 +171,7 @@ describe('configure command', function () {
         blobStorage: 'fileSystem',
         logger: {
           console: { transport: 'console', level: 'debug' },
-          main: { transport: 'file', level: 'info', filename: 'reporter.log' },
+          file: { transport: 'file', level: 'info', filename: 'reporter.log' },
           error: { transport: 'file', level: 'error', filename: 'error.log' }
         },
         phantom: {
