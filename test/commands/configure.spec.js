@@ -171,8 +171,8 @@ describe('configure command', function () {
         blobStorage: 'fileSystem',
         logger: {
           console: { transport: 'console', level: 'debug' },
-          file: { transport: 'file', level: 'info', filename: 'reporter.log' },
-          error: { transport: 'file', level: 'error', filename: 'error.log' }
+          file: { transport: 'file', level: 'info', filename: 'logs/reporter.log' },
+          error: { transport: 'file', level: 'error', filename: 'logs/error.log' }
         },
         phantom: {
           allowLocalFilesAccess: true,
