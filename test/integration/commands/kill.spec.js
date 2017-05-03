@@ -4,9 +4,9 @@ var path = require('path')
 var fs = require('fs')
 var childProcess = require('child_process')
 var should = require('should')
-var utils = require('../utils')
-var keepAliveProcess = require('../../lib/keepAliveProcess')
-var kill = require('../../lib/commands/kill').handler
+var utils = require('../../utils')
+var keepAliveProcess = require('../../../lib/keepAliveProcess')
+var kill = require('../../../lib/commands/kill').handler
 
 function tryCreate (dir) {
   try {

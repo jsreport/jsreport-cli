@@ -5,9 +5,9 @@ var fs = require('fs')
 var childProcess = require('child_process')
 var should = require('should')
 var shortid = require('shortid')
-var utils = require('../utils')
-var instanceHandler = require('../../lib/instanceHandler')
-var render = require('../../lib/commands/render').handler
+var utils = require('../../utils')
+var instanceHandler = require('../../../lib/instanceHandler')
+var render = require('../../../lib/commands/render').handler
 
 function tryCreate (dir) {
   try {

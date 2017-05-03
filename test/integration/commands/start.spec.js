@@ -4,9 +4,9 @@ var path = require('path')
 var fs = require('fs')
 var childProcess = require('child_process')
 var should = require('should')
-var utils = require('../utils')
-var instanceHandler = require('../../lib/instanceHandler')
-var start = require('../../lib/commands/start').handler
+var utils = require('../../utils')
+var instanceHandler = require('../../../lib/instanceHandler')
+var start = require('../../../lib/commands/start').handler
 
 describe('start command', function () {
   var pathToTempProject

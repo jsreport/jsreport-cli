@@ -4,8 +4,8 @@ var path = require('path')
 var fs = require('fs')
 var childProcess = require('child_process')
 var should = require('should')
-var utils = require('../utils')
-var winUninstall = require('../../lib/commands/win-uninstall').handler
+var utils = require('../../utils')
+var winUninstall = require('../../../lib/commands/win-uninstall').handler
 
 var IS_WINDOWS = process.platform === 'win32'
 
