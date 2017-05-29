@@ -6,6 +6,7 @@ var commander = require('./lib/commander')
 var init = require('./lib/commands/init')
 var repair = require('./lib/commands/repair')
 var configure = require('./lib/commands/configure')
+var render = require('./lib/commands/render')
 var cliPackageJson = require('./package.json')
 
 var cli = new Liftoff({
@@ -25,17 +26,25 @@ function initCLI (env) {
     // if no local installation is found,
     // try to detect if some global command was specified
     var globalCliHandler = commander(cwd, {
-      builtInCommands: [init, repair, configure],
-      ignoreEntryPointCommands: ['init', 'repair', 'configure']
+      builtInCommands: [init, repair, configure, render],
+      ignoreEntryPointCommands: ['init', 'repair', 'configure', 'render']
     })
 
     globalCliHandler.on('started', function (err, info) {
       if (err) {
-        console.error(err)
+        console.error(err.message)
         return process.exit(1)
       }
 
       if (!info.handled) {
+        if (info.mainCommand != null) {
+          console.error('"' + info.mainCommand + '" command not found')
+          console.error('Local jsreport-cli not found in:', env.cwd)
+          console.error('Try installing jsreport-cli or jsreport package to have more commands available')
+
+          return process.exit(1)
+        }
+
         console.error('Local jsreport-cli not found in:', env.cwd)
         console.error('Try installing jsreport-cli or jsreport package')
 
