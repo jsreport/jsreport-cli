@@ -89,11 +89,7 @@ describe('win-uninstall command', function () {
       return done()
     }
 
-    console.log('installing jsreport for the test case...')
-
-    childProcess.exec('npm install', {
-      cwd: dir
-    }, function (error, stdout, stderr) {
+    utils.npmInstall(dir, function (error) {
       var pathToWinser = path.join(__dirname, '../../node_modules/.bin/winser.cmd')
 
       if (error) {

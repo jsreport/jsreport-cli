@@ -7,7 +7,7 @@
     "jsreport": "cli.js"
   },
   "scripts": {
-    "test": "mocha --recursive \"./test/commander.spec.js\" \"./test/commands/**/*.spec.js\" --timeout 7000 && standard",
+    "test": "mocha --recursive \"./test/commander.spec.js\" \"./test/commands/**/*.spec.js\" --timeout 10000 && standard",
     "test-integration": "mocha --recursive \"./test/integration/**/*.spec.js\" --timeout 7000",
     "test:watch": "mocha --recursive \"./test/commander.spec.js\" \"./test/commands/**/*.spec.js\" --timeout 7000 --watch",
     "prepublish": "in-publish && standard || not-in-publish"
@@ -44,7 +44,7 @@
   ],
   "standard": {
     "ignore": [
-      "main.js"
+      "main.js", "test/temp"
     ],
     "parser": "babel-eslint",
     "env": {

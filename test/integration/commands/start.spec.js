@@ -2,7 +2,6 @@
 
 var path = require('path')
 var fs = require('fs')
-var childProcess = require('child_process')
 var should = require('should')
 var utils = require('../../utils')
 var instanceHandler = require('../../../lib/instanceHandler')
@@ -77,19 +76,7 @@ describe('start command', function () {
         ].join('\n')
       )
 
-      console.log('installing dependencies for test suite...')
-
-      childProcess.exec('npm install', {
-        cwd: pathToTempProject
-      }, function (error, stdout, stderr) {
-        if (error) {
-          console.log('error while installing dependencies for test suite...')
-          return done(error)
-        }
-
-        console.log('installation of dependencies for test suite completed...')
-        done()
-      })
+      utils.npmInstall(pathToTempProject, done)
     })
   })
 

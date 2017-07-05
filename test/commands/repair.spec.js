@@ -3,8 +3,8 @@
 var path = require('path')
 var fs = require('fs')
 var should = require('should')
-var utils = require('../../utils')
-var repair = require('../../../lib/commands/repair').handler
+var utils = require('../utils')
+var repair = require('../../lib/commands/repair').handler
 
 var TEMP_DIRS = [
   'repair-empty',

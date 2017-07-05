@@ -3,6 +3,8 @@
 var path = require('path')
 var mkdirp = require('mkdirp')
 var rimraf = require('rimraf')
+var fs = require('fs')
+var childProcess = require('child_process')
 var mockProcessExit = require('./mockProcessExit')
 
 function getTempDir (dir) {
@@ -22,12 +24,41 @@ function createTempDir (dirs, visitor) {
 function cleanTempDir (dirs) {
   try {
     dirs.forEach(function (dir) {
-      rimraf.sync(getTempDir(dir))
+      var fullDir = getTempDir(dir)
+      fs.readdirSync(fullDir).forEach(function (d) {
+        // omit node_modules from cleaning to speed up the tests
+        if (d !== 'node_modules') {
+          rimraf.sync(path.join(fullDir, d))
+        }
+      })
     })
-  } catch (e) {}
+  } catch (e) {
+  }
+}
+
+function npmInstall (cwd, cb) {
+  console.log('installing dependencies for test suite in ' + cwd)
+
+  if (fs.existsSync(path.join(cwd, 'node_modules', 'jsreport'))) {
+    console.log('skipping npm install...')
+    return cb()
+  }
+
+  childProcess.exec('npm install', {
+    cwd: cwd
+  }, function (error, stdout, stderr) {
+    if (error) {
+      console.log('error while installing dependencies for test suite...')
+      return cb(error)
+    }
+
+    console.log('installation of dependencies for test suite completed...')
+    cb()
+  })
 }
 
 exports.getTempDir = getTempDir
 exports.cleanTempDir = cleanTempDir
 exports.createTempDir = createTempDir
 exports.mockProcessExit = mockProcessExit
+exports.npmInstall = npmInstall

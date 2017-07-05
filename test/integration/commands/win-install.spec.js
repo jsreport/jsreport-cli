@@ -107,11 +107,7 @@ describe('win-install command', function () {
     var dir = utils.getTempDir('win-install-packagejson-ok')
     var installAsync
 
-    console.log('installing jsreport for the test case...')
-
-    childProcess.exec('npm install', {
-      cwd: dir
-    }, function (error, stdout, stderr) {
+    utils.npmInstall(dir, function (error) {
       if (error) {
         return done(error)
       }

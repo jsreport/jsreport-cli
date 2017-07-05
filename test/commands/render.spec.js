@@ -5,9 +5,9 @@ var fs = require('fs')
 var childProcess = require('child_process')
 var should = require('should')
 var shortid = require('shortid')
-var utils = require('../../utils')
-var instanceHandler = require('../../../lib/instanceHandler')
-var render = require('../../../lib/commands/render').handler
+var utils = require('../utils')
+var instanceHandler = require('../../lib/instanceHandler')
+var render = require('../../lib/commands/render').handler
 
 function tryCreate (dir) {
   try {
@@ -103,19 +103,7 @@ describe('render command', function () {
       tryCreate(pathToWorkerSocketDir)
     })
 
-    console.log('installing dependencies for test suite...')
-
-    childProcess.exec('npm install', {
-      cwd: pathToTempProject
-    }, function (error, stdout, stderr) {
-      if (error) {
-        console.log('error while installing dependencies for test suite...')
-        return done(error)
-      }
-
-      console.log('installation of dependencies for test suite completed...')
-      done()
-    })
+    utils.npmInstall(pathToTempProject, done)
   })
 
   beforeEach(function () {
@@ -269,7 +257,7 @@ describe('render command', function () {
     it('should render normally and next calls to render should use the same daemon process', function () {
       this.timeout(0)
 
-      var randomFile = path.join(pathToTempProject, shortid.generate() + '.pdf')
+      var randomFile = path.join(pathToTempProject, shortid.generate() + '.html')
 
       return (
         render({
@@ -277,7 +265,7 @@ describe('render command', function () {
           template: {
             content: '<h1>Rendering in daemon process (first time)</h1>',
             engine: 'handlebars',
-            recipe: 'phantom-pdf'
+            recipe: 'html'
           },
           out: randomFile,
           context: {
@@ -289,18 +277,17 @@ describe('render command', function () {
           }
         })
         .then(function (info) {
-          daemonProcess = info.daemonProcess.proc
-
+          daemonProcess = info.daemonProcess
           should(info.fromDaemon).be.eql(true)
           should(fs.existsSync(info.output)).be.eql(true)
 
-          randomFile = path.join(pathToTempProject, shortid.generate() + '.pdf')
+          randomFile = path.join(pathToTempProject, shortid.generate() + '.html')
 
           return render({
             template: {
               content: '<h1>Rendering in daemon process (second time)</h1>',
               engine: 'handlebars',
-              recipe: 'phantom-pdf'
+              recipe: 'html'
             },
             out: randomFile,
             context: {
@@ -321,6 +308,7 @@ describe('render command', function () {
     after(function () {
       if (daemonProcess) {
         process.kill(daemonProcess.pid)
+        process.kill(daemonProcess.proc.pid)
       }
     })
   })
@@ -361,7 +349,7 @@ describe('render command', function () {
     }
 
     it('should handle a failed render', function () {
-      var randomFile = path.join(pathToTempProject, shortid.generate() + '.pdf')
+      var randomFile = path.join(pathToTempProject, shortid.generate() + '.html')
 
       return (
         render({
@@ -389,7 +377,7 @@ describe('render command', function () {
     })
 
     it('should render normally with request option', function () {
-      var randomFile = path.join(pathToTempProject, shortid.generate() + '.pdf')
+      var randomFile = path.join(pathToTempProject, shortid.generate() + '.html')
 
       return (
         render({
@@ -397,7 +385,7 @@ describe('render command', function () {
             template: {
               content: '<h1>Test ' + instanceType + ' instance, request option</h1>',
               engine: 'none',
-              recipe: 'phantom-pdf'
+              recipe: 'html'
             }
           },
           out: randomFile,
@@ -419,14 +407,14 @@ describe('render command', function () {
     })
 
     it('should render normally with template option', function () {
-      var randomFile = path.join(pathToTempProject, shortid.generate() + '.pdf')
+      var randomFile = path.join(pathToTempProject, shortid.generate() + '.html')
 
       return (
         render({
           template: {
             content: '<h1>Test ' + instanceType + ' instance, template option</h1>',
             engine: 'none',
-            recipe: 'phantom-pdf'
+            recipe: 'html'
           },
           out: randomFile,
           context: {
@@ -447,14 +435,14 @@ describe('render command', function () {
     })
 
     it('should render normally with template and data option', function () {
-      var randomFile = path.join(pathToTempProject, shortid.generate() + '.pdf')
+      var randomFile = path.join(pathToTempProject, shortid.generate() + '.html')
 
       return (
         render({
           template: {
             content: '<h1>Hello i\'m {{name}} and i\'m rendering from {{instanceType}} instance, template and data option</h1>',
             engine: 'handlebars',
-            recipe: 'phantom-pdf'
+            recipe: 'html'
           },
           data: {
             name: 'jsreport',
