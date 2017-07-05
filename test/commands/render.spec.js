@@ -465,5 +465,41 @@ describe('render command', function () {
         })
       )
     })
+
+    it('should store meta response to specified file', function () {
+      var randomFile = path.join(pathToTempProject, shortid.generate() + '.html')
+      var randomMetaFile = path.join(pathToTempProject, shortid.generate() + '.json')
+
+      return (
+        render({
+          request: {
+            template: {
+              content: '<h1>Test ' + instanceType + ' instance, request option</h1>',
+              engine: 'none',
+              recipe: 'html'
+            }
+          },
+          out: randomFile,
+          meta: randomMetaFile,
+          context: {
+            cwd: pathToTempProject,
+            sockPath: pathToSocketDir,
+            workerSockPath: pathToWorkerSocketDir,
+            getInstance: getInstance,
+            initInstance: initInstance
+          },
+          serverUrl: serverUrl,
+          user: user,
+          password: password
+        })
+        .then(function (info) {
+          should(fs.existsSync(info.output)).be.eql(true)
+          should(fs.existsSync(info.meta)).be.eql(true)
+
+          var meta = JSON.parse(fs.readFileSync(info.meta).toString())
+          meta.should.have.property('contentDisposition')
+        })
+      )
+    })
   }
 })
