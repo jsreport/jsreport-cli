@@ -44,7 +44,8 @@
   ],
   "standard": {
     "ignore": [
-      "main.js", "test/temp"
+      "main.js",
+      "test/temp"
     ],
     "parser": "babel-eslint",
     "env": {
