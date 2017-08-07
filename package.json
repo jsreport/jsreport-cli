@@ -90,6 +90,6 @@
     "std-mocks": "1.0.1"
   },
   "optionalDependencies": {
-    "winser-with-api": "1.0.0"
+    "winser-with-api": "1.0.1"
   }
 }
