@@ -76,7 +76,7 @@ describe('render command', function () {
       )
 
       fs.writeFileSync(
-        path.join(absoluteDir, 'dev.config.json'),
+        path.join(absoluteDir, 'jsreport.config.json'),
         JSON.stringify(originalDevConfig, null, 2)
       )
 
@@ -109,7 +109,7 @@ describe('render command', function () {
   beforeEach(function () {
     // deleting cache of package.json to allow run the tests on the same project
     delete require.cache[require.resolve(path.join(pathToTempProject, './package.json'))]
-    delete require.cache[require.resolve(path.join(pathToTempProject, './dev.config.json'))]
+    delete require.cache[require.resolve(path.join(pathToTempProject, './jsreport.config.json'))]
   })
 
   describe('when using local instance', function () {
@@ -119,7 +119,7 @@ describe('render command', function () {
       beforeEach(function () {
         // enabling authentication
         fs.writeFileSync(
-          path.join(pathToTempProject, 'dev.config.json'),
+          path.join(pathToTempProject, 'jsreport.config.json'),
           JSON.stringify({
             authentication: {
               cookieSession: {
@@ -181,7 +181,7 @@ describe('render command', function () {
 
         // enabling authentication
         fs.writeFileSync(
-          path.join(pathToTempProject, 'dev.config.json'),
+          path.join(pathToTempProject, 'jsreport.config.json'),
           JSON.stringify({
             authentication: {
               cookieSession: {
@@ -247,7 +247,7 @@ describe('render command', function () {
     before(function () {
       // starting in specific port
       fs.writeFileSync(
-        path.join(pathToTempProject, 'dev.config.json'),
+        path.join(pathToTempProject, 'jsreport.config.json'),
         JSON.stringify({
           httpPort: 7468
         }, null, 2)
@@ -318,9 +318,9 @@ describe('render command', function () {
       currentInstance.express.server.close()
     }
 
-    // reset dev.config.json to original value
+    // reset jsreport.config.json to original value
     fs.writeFileSync(
-      path.join(pathToTempProject, 'dev.config.json'),
+      path.join(pathToTempProject, 'jsreport.config.json'),
       JSON.stringify(originalDevConfig, null, 2)
     )
   })

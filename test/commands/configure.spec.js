@@ -208,7 +208,7 @@ describe('configure command', function () {
     })
   })
 
-  it('should generate production configuration', function () {
+  it('should generate configuration file', function () {
     this.sandbox.stub(inquirer, 'prompt').returns(
       Promise.resolve({
         env: 'prod',
@@ -259,19 +259,15 @@ describe('configure command', function () {
       }
 
       should(fs.existsSync(result.filePath)).be.True()
-      should(path.basename(result.filePath)).be.eql('prod.config.json')
+      should(path.basename(result.filePath)).be.eql('jsreport.config.json')
       should(JSON.parse(fs.readFileSync(result.filePath).toString())).be.eql(expectedConfig)
       should(result.config).be.eql(expectedConfig)
     })
   })
 
   afterEach(function () {
-    if (fs.existsSync(path.join(pathToTempProject, 'dev.config.json'))) {
-      fs.unlinkSync(path.join(pathToTempProject, 'dev.config.json'))
-    }
-
-    if (fs.existsSync(path.join(pathToTempProject, 'prod.config.json'))) {
-      fs.unlinkSync(path.join(pathToTempProject, 'prod.config.json'))
+    if (fs.existsSync(path.join(pathToTempProject, 'jsreport.config.json'))) {
+      fs.unlinkSync(path.join(pathToTempProject, 'jsreport.config.json'))
     }
 
     this.sandbox.restore()

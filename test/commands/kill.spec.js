@@ -43,7 +43,7 @@ describe('kill command', function () {
       )
 
       fs.writeFileSync(
-        path.join(absoluteDir, 'dev.config.json'),
+        path.join(absoluteDir, 'jsreport.config.json'),
         JSON.stringify({
           httpPort: port
         }, null, 2)

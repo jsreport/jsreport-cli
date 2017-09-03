@@ -11,8 +11,7 @@ var TEMP_DIRS = [
   'repair-with-specific-version',
   'repair-packagejson-only',
   'repair-packagejson-with-server',
-  'repair-packagejson-with-devconfig',
-  'repair-packagejson-with-prodconfig'
+  'repair-packagejson-with-config'
 ]
 
 describe('repair command', function () {
@@ -54,11 +53,11 @@ describe('repair command', function () {
           )
           return
 
-        case 'repair-packagejson-with-devconfig':
+        case 'repair-packagejson-with-config':
           fs.writeFileSync(
             path.join(absoluteDir, './package.json'),
             JSON.stringify({
-              name: 'devconfig',
+              name: 'config',
               dependencies: {
                 jsreport: '*'
               }
@@ -66,24 +65,7 @@ describe('repair command', function () {
           )
 
           fs.writeFileSync(
-            path.join(absoluteDir, './dev.config.json'),
-            '{"connectionString": { "name": "fs" }}'
-          )
-          return
-
-        case 'repair-packagejson-with-prodconfig':
-          fs.writeFileSync(
-            path.join(absoluteDir, './package.json'),
-            JSON.stringify({
-              name: 'prodconfig',
-              dependencies: {
-                jsreport: '*'
-              }
-            }, null, 2)
-          )
-
-          fs.writeFileSync(
-            path.join(absoluteDir, './prod.config.json'),
+            path.join(absoluteDir, './jsreport.config.json'),
             '{"connectionString": { "name": "fs" }}'
           )
           return
@@ -105,8 +87,7 @@ describe('repair command', function () {
         should(fs.existsSync(path.join(dir, 'node_modules/' + jsreportPackage.name))).be.eql(true)
         // and generate default files
         should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'dev.config.json'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'prod.config.json'))).be.eql(true)
+        should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
         should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
       })
     )
@@ -127,8 +108,7 @@ describe('repair command', function () {
         should(fs.existsSync(path.join(dir, 'node_modules/' + jsreportPackage.name))).be.eql(true)
         // and generate default files
         should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'dev.config.json'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'prod.config.json'))).be.eql(true)
+        should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
         should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
 
         should(JSON.parse(
@@ -150,8 +130,7 @@ describe('repair command', function () {
       .then(function (jsreportPackage) {
         // should generate default files
         should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'dev.config.json'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'prod.config.json'))).be.eql(true)
+        should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
         // and replace package.json in dir
         should(
           JSON.parse(
@@ -173,8 +152,7 @@ describe('repair command', function () {
       repair({ context: { cwd: dir } })
       .then(function (jsreportPackage) {
         // should generate default files
-        should(fs.existsSync(path.join(dir, 'dev.config.json'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'prod.config.json'))).be.eql(true)
+        should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
         // replace package.json in dir
         should(
           JSON.parse(
@@ -189,18 +167,18 @@ describe('repair command', function () {
     )
   })
 
-  it('should override dev.config.json file', function () {
+  it('should override jsreport.config.json file', function () {
     // disabling timeout because npm install could take a
     // couple of minutes
     this.timeout(0)
 
-    var dir = utils.getTempDir('repair-packagejson-with-devconfig')
+    var dir = utils.getTempDir('repair-packagejson-with-config')
 
     return (
       repair({ context: { cwd: dir } })
       .then(function (jsreportPackage) {
         // should generate default files
-        should(fs.existsSync(path.join(dir, 'prod.config.json'))).be.eql(true)
+        should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
         should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
         // replace package.json in dir
         should(
@@ -208,36 +186,9 @@ describe('repair command', function () {
             fs.readFileSync(path.join(dir, 'package.json')).toString()
           ).name
         ).be.eql('jsreport-server')
-        // and replace dev.config.json
+        // and replace jsreport.config.json
         should(
-          fs.readFileSync(path.join(dir, 'dev.config.json')).toString().trim()
-        ).be.not.eql('{"connectionString": { "name": "fs" }}')
-      })
-    )
-  })
-
-  it('should override prod.config.json file', function () {
-    // disabling timeout because npm install could take a
-    // couple of minutes
-    this.timeout(0)
-
-    var dir = utils.getTempDir('repair-packagejson-with-prodconfig')
-
-    return (
-      repair({ context: { cwd: dir } })
-      .then(function (jsreportPackage) {
-        // should generate default files
-        should(fs.existsSync(path.join(dir, 'dev.config.json'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-        // replace package.json in dir
-        should(
-          JSON.parse(
-            fs.readFileSync(path.join(dir, 'package.json')).toString()
-          ).name
-        ).be.eql('jsreport-server')
-        // and replace prod.config.json
-        should(
-          fs.readFileSync(path.join(dir, 'prod.config.json')).toString().trim()
+          fs.readFileSync(path.join(dir, 'jsreport.config.json')).toString().trim()
         ).be.not.eql('{"connectionString": { "name": "fs" }}')
       })
     )
