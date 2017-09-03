@@ -11,8 +11,7 @@ var TEMP_DIRS = [
   'init-with-specific-version',
   'init-packagejson-only',
   'init-packagejson-with-server',
-  'init-packagejson-with-devconfig',
-  'init-packagejson-with-prodconfig'
+  'init-packagejson-with-config'
 ]
 
 describe('init command', function () {
