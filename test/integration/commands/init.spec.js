@@ -54,11 +54,11 @@ describe('init command', function () {
           )
           return
 
-        case 'init-packagejson-with-devconfig':
+        case 'init-packagejson-with-config':
           fs.writeFileSync(
             path.join(absoluteDir, './package.json'),
             JSON.stringify({
-              name: 'devconfig',
+              name: 'config',
               dependencies: {
                 jsreport: '*'
               }
@@ -66,24 +66,7 @@ describe('init command', function () {
           )
 
           fs.writeFileSync(
-            path.join(absoluteDir, './dev.config.json'),
-            '{"connectionString": { "name": "fs" }}'
-          )
-          return
-
-        case 'init-packagejson-with-prodconfig':
-          fs.writeFileSync(
-            path.join(absoluteDir, './package.json'),
-            JSON.stringify({
-              name: 'prodconfig',
-              dependencies: {
-                jsreport: '*'
-              }
-            }, null, 2)
-          )
-
-          fs.writeFileSync(
-            path.join(absoluteDir, './prod.config.json'),
+            path.join(absoluteDir, './jsreport.config.json'),
             '{"connectionString": { "name": "fs" }}'
           )
           return
@@ -105,8 +88,7 @@ describe('init command', function () {
         should(fs.existsSync(path.join(dir, 'node_modules/' + jsreportPackage.name))).be.eql(true)
         // and generate default files
         should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'dev.config.json'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'prod.config.json'))).be.eql(true)
+        should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
         should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
       })
     )
@@ -127,8 +109,7 @@ describe('init command', function () {
         should(fs.existsSync(path.join(dir, 'node_modules/' + jsreportPackage.name))).be.eql(true)
         // and generate default files
         should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'dev.config.json'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'prod.config.json'))).be.eql(true)
+        should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
         should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
 
         should(JSON.parse(
@@ -150,8 +131,7 @@ describe('init command', function () {
       .then(function (jsreportPackage) {
         // should generate default files
         should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'dev.config.json'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'prod.config.json'))).be.eql(true)
+        should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
         // but not replace package.json in dir
         should(
           JSON.parse(
@@ -173,8 +153,7 @@ describe('init command', function () {
       init({ context: { cwd: dir } })
       .then(function (jsreportPackage) {
         // should generate default files
-        should(fs.existsSync(path.join(dir, 'dev.config.json'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'prod.config.json'))).be.eql(true)
+        should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
         // but not replace package.json in dir
         should(
           JSON.parse(
@@ -189,55 +168,28 @@ describe('init command', function () {
     )
   })
 
-  it('should not override dev.config.json file', function () {
+  it('should not override jsreport.config.json file', function () {
     // disabling timeout because npm install could take a
     // couple of minutes
     this.timeout(0)
 
-    var dir = utils.getTempDir('init-packagejson-with-devconfig')
+    var dir = utils.getTempDir('init-packagejson-with-config')
 
     return (
       init({ context: { cwd: dir } })
       .then(function (jsreportPackage) {
         // should generate default files
-        should(fs.existsSync(path.join(dir, 'prod.config.json'))).be.eql(true)
+        should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
         should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
         // but not replace package.json in dir
         should(
           JSON.parse(
             fs.readFileSync(path.join(dir, 'package.json')).toString()
           ).name
-        ).be.eql('devconfig')
-        // and not replace dev.config.json
+        ).be.eql('config')
+        // and not replace jsreport.config.json
         should(
-          fs.readFileSync(path.join(dir, 'dev.config.json')).toString().trim()
-        ).be.eql('{"connectionString": { "name": "fs" }}')
-      })
-    )
-  })
-
-  it('should not override prod.config.json file', function () {
-    // disabling timeout because npm install could take a
-    // couple of minutes
-    this.timeout(0)
-
-    var dir = utils.getTempDir('init-packagejson-with-prodconfig')
-
-    return (
-      init({ context: { cwd: dir } })
-      .then(function (jsreportPackage) {
-        // should generate default files
-        should(fs.existsSync(path.join(dir, 'dev.config.json'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-        // but not replace package.json in dir
-        should(
-          JSON.parse(
-            fs.readFileSync(path.join(dir, 'package.json')).toString()
-          ).name
-        ).be.eql('prodconfig')
-        // and not replace prod.config.json
-        should(
-          fs.readFileSync(path.join(dir, 'prod.config.json')).toString().trim()
+          fs.readFileSync(path.join(dir, 'jsreport.config.json')).toString().trim()
         ).be.eql('{"connectionString": { "name": "fs" }}')
       })
     )
