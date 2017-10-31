@@ -4,7 +4,7 @@ var path = require('path')
 var fs = require('fs')
 var childProcess = require('child_process')
 var should = require('should')
-var shortid = require('shortid')
+var nanoid = require('nanoid')
 var utils = require('../utils')
 var instanceHandler = require('../../lib/instanceHandler')
 var render = require('../../lib/commands/render').handler
@@ -257,7 +257,7 @@ describe('render command', function () {
     it('should render normally and next calls to render should use the same daemon process', function () {
       this.timeout(0)
 
-      var randomFile = path.join(pathToTempProject, shortid.generate() + '.html')
+      var randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
 
       return (
         render({
@@ -281,7 +281,7 @@ describe('render command', function () {
           should(info.fromDaemon).be.eql(true)
           should(fs.existsSync(info.output)).be.eql(true)
 
-          randomFile = path.join(pathToTempProject, shortid.generate() + '.html')
+          randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
 
           return render({
             template: {
@@ -349,12 +349,12 @@ describe('render command', function () {
     }
 
     it('should handle a failed render', function () {
-      var randomFile = path.join(pathToTempProject, shortid.generate() + '.html')
+      var randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
 
       return (
         render({
           template: {
-            shortid: 'unknown'
+            nanoid: 'unknown'
           },
           out: randomFile,
           context: {
@@ -377,7 +377,7 @@ describe('render command', function () {
     })
 
     it('should render normally with request option', function () {
-      var randomFile = path.join(pathToTempProject, shortid.generate() + '.html')
+      var randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
 
       return (
         render({
@@ -407,7 +407,7 @@ describe('render command', function () {
     })
 
     it('should render normally with template option', function () {
-      var randomFile = path.join(pathToTempProject, shortid.generate() + '.html')
+      var randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
 
       return (
         render({
@@ -435,7 +435,7 @@ describe('render command', function () {
     })
 
     it('should render normally with template and data option', function () {
-      var randomFile = path.join(pathToTempProject, shortid.generate() + '.html')
+      var randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
 
       return (
         render({
@@ -467,8 +467,8 @@ describe('render command', function () {
     })
 
     it('should store meta response to specified file', function () {
-      var randomFile = path.join(pathToTempProject, shortid.generate() + '.html')
-      var randomMetaFile = path.join(pathToTempProject, shortid.generate() + '.json')
+      var randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
+      var randomMetaFile = path.join(pathToTempProject, nanoid(7) + '.json')
 
       return (
         render({
