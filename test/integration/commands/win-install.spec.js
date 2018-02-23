@@ -61,7 +61,6 @@ describe('win-install command', function () {
             path.join(absoluteDir, './server.js'),
             'require("jsreport")().init().catch(function(err) { console.error("Error starting jsreport:", err); process.exit(1); })'
           )
-          return
       }
     })
   })
@@ -115,42 +114,42 @@ describe('win-install command', function () {
       installAsync = winInstall({ context: { cwd: dir } })
 
       installAsync
-      .then(function (serviceInfo) {
-        if (!IS_WINDOWS) {
-          should(serviceInfo.installed).be.eql(false)
-          return done()
-        }
-
-        childProcess.exec('sc query "' + serviceInfo.serviceName + '"', {
-          cwd: dir
-        }, function (error, stdout) {
-          if (error) {
-            return done(error)
+        .then(function (serviceInfo) {
+          if (!IS_WINDOWS) {
+            should(serviceInfo.installed).be.eql(false)
+            return done()
           }
 
-          if (stdout) {
-            should(stdout.indexOf('RUNNING') !== -1).be.eql(true)
-          } else {
-            return done(new Error('Can\' detect is service is running or not'))
-          }
-
-          should(serviceInfo.installed).be.eql(true)
-          should(serviceInfo.serviceName).be.eql('jsreport-server-for-cli-testing')
-
-          console.log('uninstalling service "' + serviceInfo.serviceName + '" after test case has finished..')
-
-          childProcess.exec('sc stop "' + serviceInfo.serviceName + '"', {
+          childProcess.exec('sc query "' + serviceInfo.serviceName + '"', {
             cwd: dir
-          }, function () {
-            childProcess.exec('sc delete "' + serviceInfo.serviceName + '"', {
+          }, function (error, stdout) {
+            if (error) {
+              return done(error)
+            }
+
+            if (stdout) {
+              should(stdout.indexOf('RUNNING') !== -1).be.eql(true)
+            } else {
+              return done(new Error('Can\' detect is service is running or not'))
+            }
+
+            should(serviceInfo.installed).be.eql(true)
+            should(serviceInfo.serviceName).be.eql('jsreport-server-for-cli-testing')
+
+            console.log('uninstalling service "' + serviceInfo.serviceName + '" after test case has finished..')
+
+            childProcess.exec('sc stop "' + serviceInfo.serviceName + '"', {
               cwd: dir
             }, function () {
-              done()
+              childProcess.exec('sc delete "' + serviceInfo.serviceName + '"', {
+                cwd: dir
+              }, function () {
+                done()
+              })
             })
           })
         })
-      })
-      .catch(done)
+        .catch(done)
     })
   })
 

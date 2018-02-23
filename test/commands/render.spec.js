@@ -37,10 +37,10 @@ describe('render command', function () {
   function getInstance () {
     return (
       instanceHandler
-      .find(pathToTempProject)
-      .then(function (instanceInfo) {
-        return instanceInfo.instance
-      })
+        .find(pathToTempProject)
+        .then(function (instanceInfo) {
+          return instanceInfo.instance
+        })
     )
   }
 
@@ -276,32 +276,32 @@ describe('render command', function () {
             initInstance: initInstance
           }
         })
-        .then(function (info) {
-          daemonProcess = info.daemonProcess
-          should(info.fromDaemon).be.eql(true)
-          should(fs.existsSync(info.output)).be.eql(true)
-
-          randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
-
-          return render({
-            template: {
-              content: '<h1>Rendering in daemon process (second time)</h1>',
-              engine: 'handlebars',
-              recipe: 'html'
-            },
-            out: randomFile,
-            context: {
-              cwd: pathToTempProject,
-              sockPath: pathToSocketDir,
-              workerSockPath: pathToWorkerSocketDir,
-              getInstance: getInstance,
-              initInstance: initInstance
-            }
-          }).then(function (info) {
+          .then(function (info) {
+            daemonProcess = info.daemonProcess
             should(info.fromDaemon).be.eql(true)
             should(fs.existsSync(info.output)).be.eql(true)
+
+            randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
+
+            return render({
+              template: {
+                content: '<h1>Rendering in daemon process (second time)</h1>',
+                engine: 'handlebars',
+                recipe: 'html'
+              },
+              out: randomFile,
+              context: {
+                cwd: pathToTempProject,
+                sockPath: pathToSocketDir,
+                workerSockPath: pathToWorkerSocketDir,
+                getInstance: getInstance,
+                initInstance: initInstance
+              }
+            }).then(function (info) {
+              should(info.fromDaemon).be.eql(true)
+              should(fs.existsSync(info.output)).be.eql(true)
+            })
           })
-        })
       )
     })
 
@@ -368,11 +368,11 @@ describe('render command', function () {
           user: user,
           password: password
         })
-        .then(function () {
-          throw new Error('render should have failed')
-        }, function (err) {
-          should(err).be.Error()
-        })
+          .then(function () {
+            throw new Error('render should have failed')
+          }, function (err) {
+            should(err).be.Error()
+          })
       )
     })
 
@@ -400,9 +400,9 @@ describe('render command', function () {
           user: user,
           password: password
         })
-        .then(function (info) {
-          should(fs.existsSync(info.output)).be.eql(true)
-        })
+          .then(function (info) {
+            should(fs.existsSync(info.output)).be.eql(true)
+          })
       )
     })
 
@@ -428,9 +428,9 @@ describe('render command', function () {
           user: user,
           password: password
         })
-        .then(function (info) {
-          should(fs.existsSync(info.output)).be.eql(true)
-        })
+          .then(function (info) {
+            should(fs.existsSync(info.output)).be.eql(true)
+          })
       )
     })
 
@@ -460,9 +460,9 @@ describe('render command', function () {
           user: user,
           password: password
         })
-        .then(function (info) {
-          should(fs.existsSync(info.output)).be.eql(true)
-        })
+          .then(function (info) {
+            should(fs.existsSync(info.output)).be.eql(true)
+          })
       )
     })
 
@@ -492,13 +492,13 @@ describe('render command', function () {
           user: user,
           password: password
         })
-        .then(function (info) {
-          should(fs.existsSync(info.output)).be.eql(true)
-          should(fs.existsSync(info.meta)).be.eql(true)
+          .then(function (info) {
+            should(fs.existsSync(info.output)).be.eql(true)
+            should(fs.existsSync(info.meta)).be.eql(true)
 
-          var meta = JSON.parse(fs.readFileSync(info.meta).toString())
-          meta.should.have.property('contentDisposition')
-        })
+            var meta = JSON.parse(fs.readFileSync(info.meta).toString())
+            meta.should.have.property('contentDisposition')
+          })
       )
     })
   }

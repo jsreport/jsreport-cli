@@ -15,10 +15,10 @@ describe('start command', function () {
   function getInstance (cwd) {
     return (
       instanceHandler
-      .find(cwd)
-      .then(function (instanceInfo) {
-        return instanceInfo.instance
-      })
+        .find(cwd)
+        .then(function (instanceInfo) {
+          return instanceInfo.instance
+        })
     )
   }
 
@@ -89,11 +89,11 @@ describe('start command', function () {
           initInstance: initInstance
         }
       })
-      .then(function () {
-        throw new Error('start should have failed')
-      }, function (err) {
-        should(err).be.Error()
-      })
+        .then(function () {
+          throw new Error('start should have failed')
+        }, function (err) {
+          should(err).be.Error()
+        })
     )
   })
 
@@ -106,10 +106,10 @@ describe('start command', function () {
           initInstance: initInstance
         }
       })
-      .then(function (instance) {
-        should(instanceHandler.isJsreportInstance(instance)).be.eql(true)
-        should(instance._initialized).be.eql(true)
-      })
+        .then(function (instance) {
+          should(instanceHandler.isJsreportInstance(instance)).be.eql(true)
+          should(instance._initialized).be.eql(true)
+        })
     )
   })
 

@@ -84,11 +84,11 @@ describe('kill command', function () {
             workerSockPath: pathToWorkerSocketDir
           }
         })
-        .then(function () {
-          throw new Error('kill should have failed')
-        }, function (err) {
-          should(err).be.Error()
-        })
+          .then(function () {
+            throw new Error('kill should have failed')
+          }, function (err) {
+            should(err).be.Error()
+          })
       )
     })
 
@@ -101,11 +101,11 @@ describe('kill command', function () {
           },
           _: [null, 'zzzzzzzzzz']
         })
-        .then(function () {
-          throw new Error('kill should have failed')
-        }, function (err) {
-          should(err).be.Error()
-        })
+          .then(function () {
+            throw new Error('kill should have failed')
+          }, function (err) {
+            should(err).be.Error()
+          })
       )
     })
   })
@@ -139,10 +139,10 @@ describe('kill command', function () {
             workerSockPath: pathToWorkerSocketDir
           }
         })
-        .then(function (result) {
-          should(result).not.be.undefined()
-          should(result.pid).be.eql(childInfo.pid)
-        })
+          .then(function (result) {
+            should(result).not.be.undefined()
+            should(result.pid).be.eql(childInfo.pid)
+          })
       )
     })
 
@@ -155,10 +155,10 @@ describe('kill command', function () {
           },
           _: [null, childInfo.pid]
         })
-        .then(function (result) {
-          should(result).not.be.undefined()
-          should(result.pid).be.eql(childInfo.pid)
-        })
+          .then(function (result) {
+            should(result).not.be.undefined()
+            should(result.pid).be.eql(childInfo.pid)
+          })
       )
     })
 
@@ -171,10 +171,10 @@ describe('kill command', function () {
           },
           _: [null, childInfo.uid]
         })
-        .then(function (result) {
-          should(result).not.be.undefined()
-          should(result.uid).be.eql(childInfo.uid)
-        })
+          .then(function (result) {
+            should(result).not.be.undefined()
+            should(result.uid).be.eql(childInfo.uid)
+          })
       )
     })
 

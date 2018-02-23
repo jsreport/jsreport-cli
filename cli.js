@@ -50,8 +50,6 @@ function initCLI (env) {
 
         return process.exit(1)
       }
-
-      return
     })
 
     globalCliHandler.start(args)

@@ -68,7 +68,6 @@ describe('init command', function () {
             path.join(absoluteDir, './jsreport.config.json'),
             '{"connectionString": { "name": "fs" }}'
           )
-          return
       }
     })
   })
@@ -82,14 +81,14 @@ describe('init command', function () {
 
     return (
       init({ context: { cwd: dir } })
-      .then(function (jsreportPackage) {
+        .then(function (jsreportPackage) {
         // should install jsreport package
-        should(fs.existsSync(path.join(dir, 'node_modules/' + jsreportPackage.name))).be.eql(true)
-        // and generate default files
-        should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
-      })
+          should(fs.existsSync(path.join(dir, 'node_modules/' + jsreportPackage.name))).be.eql(true)
+          // and generate default files
+          should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
+          should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
+          should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
+        })
     )
   })
 
@@ -103,18 +102,18 @@ describe('init command', function () {
 
     return (
       init({ context: { cwd: dir }, _: [null, versionToInstall] })
-      .then(function (jsreportPackage) {
+        .then(function (jsreportPackage) {
         // should install jsreport package
-        should(fs.existsSync(path.join(dir, 'node_modules/' + jsreportPackage.name))).be.eql(true)
-        // and generate default files
-        should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
+          should(fs.existsSync(path.join(dir, 'node_modules/' + jsreportPackage.name))).be.eql(true)
+          // and generate default files
+          should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
+          should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
+          should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
 
-        should(JSON.parse(
-          fs.readFileSync(path.join(dir, 'package.json')).toString()
-        ).dependencies.jsreport).endWith(versionToInstall)
-      })
+          should(JSON.parse(
+            fs.readFileSync(path.join(dir, 'package.json')).toString()
+          ).dependencies.jsreport).endWith(versionToInstall)
+        })
     )
   })
 
@@ -127,17 +126,17 @@ describe('init command', function () {
 
     return (
       init({ context: { cwd: dir } })
-      .then(function (jsreportPackage) {
+        .then(function (jsreportPackage) {
         // should generate default files
-        should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
-        // but not replace package.json in dir
-        should(
-          JSON.parse(
-            fs.readFileSync(path.join(dir, 'package.json')).toString()
-          ).name
-        ).be.eql('packagejson-only')
-      })
+          should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
+          should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
+          // but not replace package.json in dir
+          should(
+            JSON.parse(
+              fs.readFileSync(path.join(dir, 'package.json')).toString()
+            ).name
+          ).be.eql('packagejson-only')
+        })
     )
   })
 
@@ -150,20 +149,20 @@ describe('init command', function () {
 
     return (
       init({ context: { cwd: dir } })
-      .then(function (jsreportPackage) {
+        .then(function (jsreportPackage) {
         // should generate default files
-        should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
-        // but not replace package.json in dir
-        should(
-          JSON.parse(
-            fs.readFileSync(path.join(dir, 'package.json')).toString()
-          ).name
-        ).be.eql('packagejson-with-server')
-        // and not replace server.js
-        should(
-          fs.readFileSync(path.join(dir, 'server.js')).toString().trim()
-        ).be.eql('require("jsreport")().init()')
-      })
+          should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
+          // but not replace package.json in dir
+          should(
+            JSON.parse(
+              fs.readFileSync(path.join(dir, 'package.json')).toString()
+            ).name
+          ).be.eql('packagejson-with-server')
+          // and not replace server.js
+          should(
+            fs.readFileSync(path.join(dir, 'server.js')).toString().trim()
+          ).be.eql('require("jsreport")().init()')
+        })
     )
   })
 
@@ -176,21 +175,21 @@ describe('init command', function () {
 
     return (
       init({ context: { cwd: dir } })
-      .then(function (jsreportPackage) {
+        .then(function (jsreportPackage) {
         // should generate default files
-        should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
-        should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-        // but not replace package.json in dir
-        should(
-          JSON.parse(
-            fs.readFileSync(path.join(dir, 'package.json')).toString()
-          ).name
-        ).be.eql('config')
-        // and not replace jsreport.config.json
-        should(
-          fs.readFileSync(path.join(dir, 'jsreport.config.json')).toString().trim()
-        ).be.eql('{"connectionString": { "name": "fs" }}')
-      })
+          should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
+          should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
+          // but not replace package.json in dir
+          should(
+            JSON.parse(
+              fs.readFileSync(path.join(dir, 'package.json')).toString()
+            ).name
+          ).be.eql('config')
+          // and not replace jsreport.config.json
+          should(
+            fs.readFileSync(path.join(dir, 'jsreport.config.json')).toString().trim()
+          ).be.eql('{"connectionString": { "name": "fs" }}')
+        })
     )
   })
 

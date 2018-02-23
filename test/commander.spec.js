@@ -168,9 +168,9 @@ describe('commander', function () {
 
       return (
         cli.executeCommand('test', { args: true })
-        .then(function (result) {
-          should(result).be.exactly(cmdArgs)
-        })
+          .then(function (result) {
+            should(result).be.exactly(cmdArgs)
+          })
       )
     })
 
@@ -227,16 +227,16 @@ describe('commander', function () {
       })
 
       return cli.executeCommand('test')
-      .then(function () {
-        throw new Error('command should have failed')
-      }, function (err) {
-        should(err).be.Error()
-        should(err).be.exactly(errorInEvent)
-        should(err.message).be.eql('error in handler')
-        should(onInitCalled).be.eql(true)
-        should(onErrorCalled).be.eql(true)
-        should(onFinishCalled).be.eql(true)
-      })
+        .then(function () {
+          throw new Error('command should have failed')
+        }, function (err) {
+          should(err).be.Error()
+          should(err).be.exactly(errorInEvent)
+          should(err.message).be.eql('error in handler')
+          should(onInitCalled).be.eql(true)
+          should(onErrorCalled).be.eql(true)
+          should(onFinishCalled).be.eql(true)
+        })
     })
 
     it('should fail when command async handler fails', function () {
@@ -297,16 +297,16 @@ describe('commander', function () {
 
       return (
         cli.executeCommand('test')
-        .then(function () {
-          throw new Error('command should have failed')
-        }, function (err) {
-          should(err).be.Error()
-          should(err).be.exactly(errorInEvent)
-          should(err.message).be.eql('error in handler')
-          should(onInitCalled).be.eql(true)
-          should(onErrorCalled).be.eql(true)
-          should(onFinishCalled).be.eql(true)
-        })
+          .then(function () {
+            throw new Error('command should have failed')
+          }, function (err) {
+            should(err).be.Error()
+            should(err).be.exactly(errorInEvent)
+            should(err.message).be.eql('error in handler')
+            should(onInitCalled).be.eql(true)
+            should(onErrorCalled).be.eql(true)
+            should(onFinishCalled).be.eql(true)
+          })
       )
     })
 
@@ -364,12 +364,12 @@ describe('commander', function () {
 
       return (
         cli.executeCommand('test')
-        .then(function (result) {
-          should(result).be.exactly(successValueInEvent)
-          should(onInitCalled).be.eql(true)
-          should(onSuccessCalled).be.eql(true)
-          should(onFinishCalled).be.eql(true)
-        })
+          .then(function (result) {
+            should(result).be.exactly(successValueInEvent)
+            should(onInitCalled).be.eql(true)
+            should(onSuccessCalled).be.eql(true)
+            should(onFinishCalled).be.eql(true)
+          })
       )
     })
 
@@ -431,12 +431,12 @@ describe('commander', function () {
 
       return (
         cli.executeCommand('test')
-        .then(function (result) {
-          should(result).be.exactly(successValueInEvent)
-          should(onInitCalled).be.eql(true)
-          should(onSuccessCalled).be.eql(true)
-          should(onFinishCalled).be.eql(true)
-        })
+          .then(function (result) {
+            should(result).be.exactly(successValueInEvent)
+            should(onInitCalled).be.eql(true)
+            should(onSuccessCalled).be.eql(true)
+            should(onFinishCalled).be.eql(true)
+          })
       )
     })
   })

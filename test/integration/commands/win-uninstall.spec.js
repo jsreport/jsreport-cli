@@ -50,7 +50,6 @@ describe('win-uninstall command', function () {
             path.join(absoluteDir, './server.js'),
             'require("jsreport")().init().catch(function(err) { console.error("Error starting jsreport:", err); process.exit(1); })'
           )
-          return
       }
     })
   })
@@ -108,24 +107,24 @@ describe('win-uninstall command', function () {
         uninstallAsync = winUninstall({ context: { cwd: dir } })
 
         uninstallAsync
-        .then(function (serviceInfo) {
-          if (!IS_WINDOWS) {
-            should(serviceInfo.uninstalled).be.eql(false)
-            return done()
-          }
-
-          childProcess.exec('sc query "' + serviceInfo.serviceName + '"', {
-            cwd: dir
-          }, function (error, stdout) {
-            if (error) {
-              should(serviceInfo.serviceName).be.eql('jsreport-server-for-uninstall')
+          .then(function (serviceInfo) {
+            if (!IS_WINDOWS) {
+              should(serviceInfo.uninstalled).be.eql(false)
               return done()
             }
 
-            return done(new Error('service ' + serviceInfo.serviceName + ' should have been uninstalled'))
+            childProcess.exec('sc query "' + serviceInfo.serviceName + '"', {
+              cwd: dir
+            }, function (error, stdout) {
+              if (error) {
+                should(serviceInfo.serviceName).be.eql('jsreport-server-for-uninstall')
+                return done()
+              }
+
+              return done(new Error('service ' + serviceInfo.serviceName + ' should have been uninstalled'))
+            })
           })
-        })
-        .catch(done)
+          .catch(done)
       })
     })
   })
