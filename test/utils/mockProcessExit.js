@@ -1,27 +1,23 @@
-'use strict'
+let _originalProcessExit
+let _hasBeenCalled = false
+let _exitCode
+let callInfo = {}
 
-var _originalProcessExit
-var _hasBeenCalled = false
-var _exitCode
-var callInfo = {}
-
-exports.enable = function () {
+exports.enable = () => {
   _originalProcessExit = process.exit
 
   _exitCode = undefined
   _hasBeenCalled = false
 
-  process.exit = function (exitCode) {
+  process.exit = (exitCode) => {
     _exitCode = exitCode
     _hasBeenCalled = true
   }
 }
 
-exports.callInfo = function () {
-  return callInfo
-}
+exports.callInfo = () => callInfo
 
-exports.restore = function () {
+exports.restore = () => {
   process.exit = _originalProcessExit
 
   callInfo = {

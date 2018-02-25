@@ -1,11 +1,9 @@
-'use strict'
-
-var path = require('path')
-var fs = require('fs')
-var should = require('should')
-var utils = require('../utils')
-var keepAliveProcess = require('../../lib/keepAliveProcess')
-var kill = require('../../lib/commands/kill').handler
+const path = require('path')
+const fs = require('fs')
+const should = require('should')
+const utils = require('../utils')
+const keepAliveProcess = require('../../lib/keepAliveProcess')
+const kill = require('../../lib/commands/kill').handler
 
 function tryCreate (dir) {
   try {
@@ -13,11 +11,11 @@ function tryCreate (dir) {
   } catch (ex) { }
 }
 
-describe('kill command', function () {
-  var pathToTempProject
-  var pathToSocketDir
-  var pathToWorkerSocketDir
-  var port = 9398
+describe('kill command', () => {
+  let pathToTempProject
+  let pathToSocketDir
+  let pathToWorkerSocketDir
+  let port = 9398
 
   before(function (done) {
     // disabling timeout because npm install could take a
@@ -75,110 +73,84 @@ describe('kill command', function () {
     })
   })
 
-  describe('when there is no daemon instance running', function () {
-    it('should fail searching daemon by current working directory', function () {
-      return (
-        kill({
-          context: {
-            cwd: pathToTempProject,
-            workerSockPath: pathToWorkerSocketDir
-          }
-        })
-          .then(function () {
-            throw new Error('kill should have failed')
-          }, function (err) {
-            should(err).be.Error()
-          })
-      )
+  describe('when there is no daemon instance running', () => {
+    it('should fail searching daemon by current working directory', () => {
+      return kill({
+        context: {
+          cwd: pathToTempProject,
+          workerSockPath: pathToWorkerSocketDir
+        }
+      }).should.be.rejected()
     })
 
-    it('should fail searching daemon by identifier', function () {
-      return (
-        kill({
-          context: {
-            cwd: pathToTempProject,
-            workerSockPath: pathToWorkerSocketDir
-          },
-          _: [null, 'zzzzzzzzzz']
-        })
-          .then(function () {
-            throw new Error('kill should have failed')
-          }, function (err) {
-            should(err).be.Error()
-          })
-      )
+    it('should fail searching daemon by identifier', () => {
+      return kill({
+        context: {
+          cwd: pathToTempProject,
+          workerSockPath: pathToWorkerSocketDir
+        },
+        _: [null, 'zzzzzzzzzz']
+      }).should.be.rejected()
     })
   })
 
-  describe('when there is daemon instance running', function () {
-    var childInfo
-    var child
+  describe('when there is daemon instance running', () => {
+    let childInfo
+    let child
 
-    beforeEach(function () {
+    beforeEach(async function () {
       this.timeout(0)
 
       console.log('spawning a daemon jsreport instance for the test suite..')
 
-      return keepAliveProcess({
+      const info = await keepAliveProcess({
         mainSockPath: pathToSocketDir,
         workerSockPath: pathToWorkerSocketDir,
         cwd: pathToTempProject
-      }).then(function (info) {
-        console.log('daemonized jsreport instance is ready..')
-
-        childInfo = info
-        child = info.proc
       })
+      console.log('daemonized jsreport instance is ready..')
+
+      childInfo = info
+      child = info.proc
     })
 
-    it('should kill by current working directory', function () {
-      return (
-        kill({
-          context: {
-            cwd: pathToTempProject,
-            workerSockPath: pathToWorkerSocketDir
-          }
-        })
-          .then(function (result) {
-            should(result).not.be.undefined()
-            should(result.pid).be.eql(childInfo.pid)
-          })
-      )
+    it('should kill by current working directory', async () => {
+      const result = await kill({
+        context: {
+          cwd: pathToTempProject,
+          workerSockPath: pathToWorkerSocketDir
+        }
+      })
+      should(result).not.be.undefined()
+      should(result.pid).be.eql(childInfo.pid)
     })
 
-    it('should kill by process id', function () {
-      return (
-        kill({
-          context: {
-            cwd: pathToTempProject,
-            workerSockPath: pathToWorkerSocketDir
-          },
-          _: [null, childInfo.pid]
-        })
-          .then(function (result) {
-            should(result).not.be.undefined()
-            should(result.pid).be.eql(childInfo.pid)
-          })
-      )
+    it('should kill by process id', async () => {
+      const result = await kill({
+        context: {
+          cwd: pathToTempProject,
+          workerSockPath: pathToWorkerSocketDir
+        },
+        _: [null, childInfo.pid]
+      })
+
+      should(result).not.be.undefined()
+      should(result.pid).be.eql(childInfo.pid)
     })
 
-    it('should kill by uid', function () {
-      return (
-        kill({
-          context: {
-            cwd: pathToTempProject,
-            workerSockPath: pathToWorkerSocketDir
-          },
-          _: [null, childInfo.uid]
-        })
-          .then(function (result) {
-            should(result).not.be.undefined()
-            should(result.uid).be.eql(childInfo.uid)
-          })
-      )
+    it('should kill by uid', async () => {
+      const result = await kill({
+        context: {
+          cwd: pathToTempProject,
+          workerSockPath: pathToWorkerSocketDir
+        },
+        _: [null, childInfo.uid]
+      })
+      should(result).not.be.undefined()
+      should(result.uid).be.eql(childInfo.uid)
     })
 
-    afterEach(function () {
+    afterEach(() => {
       if (child) {
         child.kill()
       }

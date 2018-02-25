@@ -1,18 +1,16 @@
-'use strict'
+const should = require('should')
+const Promise = require('bluebird')
+const stdMocks = require('std-mocks')
+const utils = require('./utils')
+const commander = require('../lib/commander')
+const pkg = require('../package.json')
+const exitMock = utils.mockProcessExit
 
-var should = require('should')
-var Promise = require('bluebird')
-var stdMocks = require('std-mocks')
-var utils = require('./utils')
-var commander = require('../lib/commander')
-var pkg = require('../package.json')
-var exitMock = utils.mockProcessExit
-
-describe('commander', function () {
-  describe('when initializing', function () {
-    it('should initialize with default options', function () {
-      var defaultCommands = ['init', 'configure', 'start', 'win-install', 'render', 'repair', 'win-uninstall', 'kill']
-      var cli = commander()
+describe('commander', () => {
+  describe('when initializing', () => {
+    it('should initialize with default options', () => {
+      const defaultCommands = ['init', 'configure', 'start', 'win-install', 'render', 'repair', 'win-uninstall', 'kill']
+      const cli = commander()
 
       should(cli.cwd).be.eql(process.cwd())
       should(cli.context).be.not.undefined()
@@ -22,24 +20,21 @@ describe('commander', function () {
       should(cli._cli).not.be.undefined()
     })
 
-    it('should emit event', function (done) {
-      var cli = commander()
+    it('should emit event', (done) => {
+      const cli = commander()
 
       cli.on('initialized', done)
     })
 
-    it('should have a method to get registered commands', function () {
-      var cli = commander()
+    it('should have a method to get registered commands', () => {
+      const cli = commander()
 
       should(cli.getCommands()).be.Array()
       should(cli.getCommands().length).be.above(0)
     })
 
-    it('should have an option to register built-in commands', function () {
-      var commands
-      var cli
-
-      commands = [{
+    it('should have an option to register built-in commands', () => {
+      const commands = [{
         command: 'push',
         description: 'push command',
         handler: function () {}
@@ -49,16 +44,13 @@ describe('commander', function () {
         handler: function () {}
       }]
 
-      cli = commander(undefined, { builtInCommands: commands })
+      const cli = commander(undefined, { builtInCommands: commands })
 
       should(cli.getCommands()).be.eql(['push', 'pull'])
     })
 
-    it('should have an option to disable commands', function () {
-      var commands
-      var cli
-
-      commands = [{
+    it('should have an option to disable commands', () => {
+      const commands = [{
         command: 'push',
         description: 'push command',
         handler: function () {}
@@ -68,15 +60,15 @@ describe('commander', function () {
         handler: function () {}
       }]
 
-      cli = commander(undefined, { builtInCommands: commands, disabledCommands: ['push'] })
+      const cli = commander(undefined, { builtInCommands: commands, disabledCommands: ['push'] })
 
       should(cli.getCommands()).be.eql(['pull'])
     })
   })
 
-  describe('when registering command', function () {
-    it('should throw error on invalid command module', function () {
-      var cli = commander()
+  describe('when registering command', () => {
+    it('should throw error on invalid command module', () => {
+      const cli = commander()
 
       should(function registerInvalidCommands () {
         cli.registerCommand(2)
@@ -91,10 +83,10 @@ describe('commander', function () {
       }).throw()
     })
 
-    it('should register command', function () {
-      var cli = commander()
+    it('should register command', () => {
+      const cli = commander()
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function () {}
@@ -106,24 +98,24 @@ describe('commander', function () {
       should(cli._commands.test).be.exactly(testCommand)
     })
 
-    it('should return instance', function () {
-      var cli = commander()
+    it('should return instance', () => {
+      const cli = commander()
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function () {}
       }
 
-      var returnValue = cli.registerCommand(testCommand)
+      const returnValue = cli.registerCommand(testCommand)
 
       should(cli).be.exactly(returnValue)
     })
 
     it('should emit event', function (done) {
-      var cli = commander()
+      const cli = commander()
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function () {}
@@ -139,18 +131,18 @@ describe('commander', function () {
     })
   })
 
-  describe('when executing command', function () {
-    it('should fail on invalid command', function () {
-      var cli = commander()
+  describe('when executing command', () => {
+    it('should fail on invalid command', () => {
+      const cli = commander()
 
       return should(cli.executeCommand('unknowCmd')).be.rejected()
     })
 
-    it('should pass arguments to command handler', function () {
-      var cli = commander()
-      var cmdArgs
+    it('should pass arguments to command handler', () => {
+      const cli = commander()
+      let cmdArgs
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function (args) {
@@ -160,7 +152,7 @@ describe('commander', function () {
 
       cli.registerCommand(testCommand)
 
-      cli.on('command.init', function (cmdName, args) {
+      cli.on('command.init', (cmdName, args) => {
         if (cmdName === 'test') {
           cmdArgs = args
         }
@@ -174,10 +166,10 @@ describe('commander', function () {
       )
     })
 
-    it('should fail when command sync handler fails', function () {
-      var cli = commander()
+    it('should fail when command sync handler fails', () => {
+      const cli = commander()
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function () {
@@ -190,14 +182,14 @@ describe('commander', function () {
       return should(cli.executeCommand('test')).be.rejectedWith({ message: 'error in handler' })
     })
 
-    it('should emit event when command sync handler fails', function () {
-      var cli = commander()
-      var onInitCalled = false
-      var onErrorCalled = false
-      var onFinishCalled = false
-      var errorInEvent
+    it('should emit event when command sync handler fails', () => {
+      const cli = commander()
+      let onInitCalled = false
+      let onErrorCalled = false
+      let onFinishCalled = false
+      let errorInEvent
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function () {
@@ -239,10 +231,10 @@ describe('commander', function () {
         })
     })
 
-    it('should fail when command async handler fails', function () {
-      var cli = commander()
+    it('should fail when command async handler fails', () => {
+      const cli = commander()
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function () {
@@ -257,14 +249,14 @@ describe('commander', function () {
       return should(cli.executeCommand('test')).be.rejectedWith({ message: 'error in handler' })
     })
 
-    it('should emit event when command async handler fails', function () {
-      var cli = commander()
-      var onInitCalled = false
-      var onErrorCalled = false
-      var onFinishCalled = false
-      var errorInEvent
+    it('should emit event when command async handler fails', () => {
+      const cli = commander()
+      let onInitCalled = false
+      let onErrorCalled = false
+      let onFinishCalled = false
+      let errorInEvent
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function () {
@@ -276,20 +268,20 @@ describe('commander', function () {
 
       cli.registerCommand(testCommand)
 
-      cli.on('command.init', function (cmdName) {
+      cli.on('command.init', (cmdName) => {
         if (cmdName === 'test') {
           onInitCalled = true
         }
       })
 
-      cli.on('command.error', function (cmdName, error) {
+      cli.on('command.error', (cmdName, error) => {
         if (cmdName === 'test') {
           onErrorCalled = true
           errorInEvent = error
         }
       })
 
-      cli.on('command.finish', function (cmdName) {
+      cli.on('command.finish', (cmdName) => {
         if (cmdName === 'test') {
           onFinishCalled = true
         }
@@ -310,10 +302,10 @@ describe('commander', function () {
       )
     })
 
-    it('should success when command sync handler ends successfully', function () {
-      var cli = commander()
+    it('should success when command sync handler ends successfully', () => {
+      const cli = commander()
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function () {
@@ -326,14 +318,14 @@ describe('commander', function () {
       return should(cli.executeCommand('test')).be.fulfilledWith(true)
     })
 
-    it('should emit event when command sync handler ends successfully', function () {
-      var cli = commander()
-      var onInitCalled = false
-      var onSuccessCalled = false
-      var onFinishCalled = false
-      var successValueInEvent
+    it('should emit event when command sync handler ends successfully', () => {
+      const cli = commander()
+      let onInitCalled = false
+      let onSuccessCalled = false
+      let onFinishCalled = false
+      let successValueInEvent
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function () {
@@ -343,20 +335,20 @@ describe('commander', function () {
 
       cli.registerCommand(testCommand)
 
-      cli.on('command.init', function (cmdName) {
+      cli.on('command.init', (cmdName) => {
         if (cmdName === 'test') {
           onInitCalled = true
         }
       })
 
-      cli.on('command.success', function (cmdName, value) {
+      cli.on('command.success', (cmdName, value) => {
         if (cmdName === 'test') {
           onSuccessCalled = true
           successValueInEvent = value
         }
       })
 
-      cli.on('command.finish', function (cmdName) {
+      cli.on('command.finish', (cmdName) => {
         if (cmdName === 'test') {
           onFinishCalled = true
         }
@@ -373,10 +365,10 @@ describe('commander', function () {
       )
     })
 
-    it('should success when command async handler ends successfully', function () {
-      var cli = commander()
+    it('should success when command async handler ends successfully', () => {
+      const cli = commander()
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function () {
@@ -391,14 +383,14 @@ describe('commander', function () {
       return should(cli.executeCommand('test')).be.fulfilledWith(true)
     })
 
-    it('should emit event when command async handler ends successfully', function () {
-      var cli = commander()
-      var onInitCalled = false
-      var onSuccessCalled = false
-      var onFinishCalled = false
-      var successValueInEvent
+    it('should emit event when command async handler ends successfully', () => {
+      const cli = commander()
+      let onInitCalled = false
+      let onSuccessCalled = false
+      let onFinishCalled = false
+      let successValueInEvent
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function () {
@@ -441,9 +433,9 @@ describe('commander', function () {
     })
   })
 
-  describe('when starting', function () {
-    it('should fail on invalid arguments', function () {
-      var cli = commander()
+  describe('when starting', () => {
+    it('should fail on invalid arguments', () => {
+      const cli = commander()
 
       should(function startCommander () {
         cli.start()
@@ -454,14 +446,14 @@ describe('commander', function () {
       }).throw()
     })
 
-    it('should print help by default when command is not present', function (done) {
-      var cli = commander()
-      var helpPrinted = false
+    it('should print help by default when command is not present', (done) => {
+      const cli = commander()
+      let helpPrinted = false
 
       stdMocks.use()
 
-      cli.on('parsed', function () {
-        process.nextTick(function () {
+      cli.on('parsed', () => {
+        process.nextTick(() => {
           stdMocks.restore()
           helpPrinted = stdMocks.flush().stderr.join('\n').indexOf('Commands:') !== -1
           should(helpPrinted).be.eql(true)
@@ -472,17 +464,17 @@ describe('commander', function () {
       cli.start([])
     })
 
-    it('should not print help when using `showHelpWhenNoCommand` option and command is not present', function (done) {
-      var cli = commander(process.cwd(), {
+    it('should not print help when using `showHelpWhenNoCommand` option and command is not present', (done) => {
+      const cli = commander(process.cwd(), {
         showHelpWhenNoCommand: false
       })
 
-      var output
+      let output
 
       stdMocks.use()
 
-      cli.on('parsed', function () {
-        process.nextTick(function () {
+      cli.on('parsed', () => {
+        process.nextTick(() => {
           stdMocks.restore()
           output = stdMocks.flush()
 
@@ -495,9 +487,9 @@ describe('commander', function () {
       cli.start([])
     })
 
-    it('should handle --help option by default', function (done) {
-      var cli = commander()
-      var helpPrinted = false
+    it('should handle --help option by default', (done) => {
+      const cli = commander()
+      let helpPrinted = false
 
       stdMocks.use()
       exitMock.enable()
@@ -517,15 +509,15 @@ describe('commander', function () {
       cli.start(['--help'])
     })
 
-    it('should handle --version option by default', function (done) {
-      var cli = commander()
-      var versionPrinted
+    it('should handle --version option by default', (done) => {
+      const cli = commander()
+      let versionPrinted
 
       stdMocks.use()
       exitMock.enable()
 
-      cli.on('parsed', function () {
-        process.nextTick(function () {
+      cli.on('parsed', () => {
+        process.nextTick(() => {
           stdMocks.restore()
           exitMock.restore()
 
@@ -539,21 +531,16 @@ describe('commander', function () {
       cli.start(['--version'])
     })
 
-    it('should emit start events', function (done) {
-      var cli = commander()
-      var startingCalled = false
-      var startedCalled = false
+    it('should emit start events', (done) => {
+      const cli = commander()
+      let startingCalled = false
+      let startedCalled = false
 
-      cli.on('starting', function () {
-        startingCalled = true
-      })
+      cli.on('starting', () => (startingCalled = true))
+      cli.on('started', () => (startedCalled = true))
 
-      cli.on('started', function () {
-        startedCalled = true
-      })
-
-      cli.on('parsed', function () {
-        process.nextTick(function () {
+      cli.on('parsed', () => {
+        process.nextTick(() => {
           stdMocks.restore()
           stdMocks.flush()
 
@@ -568,19 +555,19 @@ describe('commander', function () {
       cli.start([])
     })
 
-    it('should emit parse events', function (done) {
-      var cli = commander()
-      var cliArgs = ['--some', '--value']
-      var argsInEvent
-      var contextInEvent
+    it('should emit parse events', (done) => {
+      const cli = commander()
+      const cliArgs = ['--some', '--value']
+      let argsInEvent
+      let contextInEvent
 
-      cli.on('parsing', function (args, context) {
+      cli.on('parsing', (args, context) => {
         argsInEvent = args
         contextInEvent = context
       })
 
-      cli.on('parsed', function () {
-        process.nextTick(function () {
+      cli.on('parsed', () => {
+        process.nextTick(() => {
           stdMocks.restore()
           stdMocks.flush()
           exitMock.restore()
@@ -596,19 +583,17 @@ describe('commander', function () {
       cli.start(cliArgs)
     })
 
-    it('should exit on invalid command', function (done) {
-      var cli = commander()
-      var cliArgs = ['unknown']
+    it('should exit on invalid command', (done) => {
+      const cli = commander()
+      const cliArgs = ['unknown']
 
-      cli.on('parsed', function (err) {
-        process.nextTick(function () {
-          var exitCode
-
+      cli.on('parsed', (err) => {
+        process.nextTick(() => {
           stdMocks.restore()
           stdMocks.flush()
           exitMock.restore()
 
-          exitCode = exitMock.callInfo().exitCode
+          const exitCode = exitMock.callInfo().exitCode
 
           should(err).be.Error()
           should(exitCode).be.eql(1)
@@ -622,19 +607,17 @@ describe('commander', function () {
       cli.start(cliArgs)
     })
 
-    it('should exit on invalid option', function (done) {
-      var cli = commander()
-      var cliArgs = ['--unknown']
+    it('should exit on invalid option', (done) => {
+      const cli = commander()
+      const cliArgs = ['--unknown']
 
-      cli.on('parsed', function (err) {
-        process.nextTick(function () {
-          var exitCode
-
+      cli.on('parsed', (err) => {
+        process.nextTick(() => {
           stdMocks.restore()
           stdMocks.flush()
           exitMock.restore()
 
-          exitCode = exitMock.callInfo().exitCode
+          const exitCode = exitMock.callInfo().exitCode
 
           should(err).be.Error()
           should(exitCode).be.eql(1)
@@ -661,15 +644,13 @@ describe('commander', function () {
 
       cli.registerCommand(testCommand)
 
-      cli.on('command.error', function (cmdName, err) {
-        setTimeout(function () {
-          var exitCode
-
+      cli.on('command.error', (cmdName, err) => {
+        setTimeout(() => {
           stdMocks.restore()
           stdMocks.flush()
           exitMock.restore()
 
-          exitCode = exitMock.callInfo().exitCode
+          const exitCode = exitMock.callInfo().exitCode
 
           should(cmdName).be.eql('test')
           should(err).be.Error()
@@ -684,30 +665,26 @@ describe('commander', function () {
       cli.start(['test'])
     })
 
-    it('should handle a failing async command', function (done) {
-      var cli = commander()
+    it('should handle a failing async command', (done) => {
+      const cli = commander()
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function () {
-          return new Promise(function (resolve, reject) {
-            reject(new Error('error testing'))
-          })
+          return new Promise((resolve, reject) => reject(new Error('error testing')))
         }
       }
 
       cli.registerCommand(testCommand)
 
-      cli.on('command.error', function (cmdName, err) {
-        setTimeout(function () {
-          var exitCode
-
+      cli.on('command.error', (cmdName, err) => {
+        setTimeout(() => {
           stdMocks.restore()
           stdMocks.flush()
           exitMock.restore()
 
-          exitCode = exitMock.callInfo().exitCode
+          const exitCode = exitMock.callInfo().exitCode
 
           should(cmdName).be.eql('test')
           should(err).be.Error()
@@ -722,13 +699,13 @@ describe('commander', function () {
       cli.start(['test'])
     })
 
-    it('should handle a successfully sync command ', function (done) {
-      var cli = commander()
+    it('should handle a successfully sync command ', (done) => {
+      const cli = commander()
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function () {
+        handler: () => {
           console.log('test output')
           return true
         }
@@ -736,16 +713,13 @@ describe('commander', function () {
 
       cli.registerCommand(testCommand)
 
-      cli.on('command.success', function (cmdName, result) {
-        setTimeout(function () {
-          var output
-          var exitCode
-
+      cli.on('command.success', (cmdName, result) => {
+        setTimeout(() => {
           stdMocks.restore()
           exitMock.restore()
 
-          output = stdMocks.flush()
-          exitCode = exitMock.callInfo().exitCode
+          const output = stdMocks.flush()
+          const exitCode = exitMock.callInfo().exitCode
 
           should(cmdName).be.eql('test')
           should(output.stdout[0].replace(/(?:\r\n|\r|\n)/, '')).be.eql('test output')
@@ -761,14 +735,14 @@ describe('commander', function () {
       cli.start(['test'])
     })
 
-    it('should handle a successfully async command', function (done) {
-      var cli = commander()
+    it('should handle a successfully async command', (done) => {
+      const cli = commander()
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function () {
-          return new Promise(function (resolve, reject) {
+          return new Promise((resolve, reject) => {
             console.log('test async output')
             resolve(true)
           })
@@ -777,16 +751,13 @@ describe('commander', function () {
 
       cli.registerCommand(testCommand)
 
-      cli.on('command.success', function (cmdName, result) {
-        setTimeout(function () {
-          var output
-          var exitCode
-
+      cli.on('command.success', (cmdName, result) => {
+        setTimeout(() => {
           stdMocks.restore()
           exitMock.restore()
 
-          output = stdMocks.flush()
-          exitCode = exitMock.callInfo().exitCode
+          const output = stdMocks.flush()
+          const exitCode = exitMock.callInfo().exitCode
 
           should(cmdName).be.eql('test')
           should(output.stdout[0].replace(/(?:\r\n|\r|\n)/, '')).be.eql('test async output')
@@ -802,10 +773,10 @@ describe('commander', function () {
       cli.start(['test'])
     })
 
-    it('should pass context to command', function (done) {
-      var cli = commander()
+    it('should pass context to command', (done) => {
+      const cli = commander()
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function (argv) {
@@ -815,8 +786,8 @@ describe('commander', function () {
 
       cli.registerCommand(testCommand)
 
-      cli.on('command.success', function (cmdName, result) {
-        setTimeout(function () {
+      cli.on('command.success', (cmdName, result) => {
+        setTimeout(() => {
           stdMocks.restore()
           stdMocks.flush()
           exitMock.restore()

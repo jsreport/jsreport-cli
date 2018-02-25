@@ -1,20 +1,18 @@
-'use strict'
+const path = require('path')
+const fs = require('fs')
+const childProcess = require('child_process')
+const should = require('should')
+const assign = require('object-assign')
+const stdMocks = require('std-mocks')
+const utils = require('../utils')
+const commander = require('../../lib/commander')
+const exitMock = utils.mockProcessExit
 
-var path = require('path')
-var fs = require('fs')
-var childProcess = require('child_process')
-var should = require('should')
-var assign = require('object-assign')
-var stdMocks = require('std-mocks')
-var utils = require('../utils')
-var commander = require('../../lib/commander')
-var exitMock = utils.mockProcessExit
+describe('commander', () => {
+  describe('when using jsreport instances', () => {
+    let pathToTempProject
 
-describe('commander', function () {
-  describe('when using jsreport instances', function () {
-    var pathToTempProject
-
-    var originalPkgJson = {
+    const originalPkgJson = {
       name: 'commander-project',
       dependencies: {
         jsreport: '*'
@@ -68,7 +66,7 @@ describe('commander', function () {
       })
     })
 
-    beforeEach(function () {
+    beforeEach(() => {
       // deleting cache of package.json to allow run the tests on the same project
       delete require.cache[require.resolve(path.join(pathToTempProject, './package.json'))]
 
@@ -78,14 +76,14 @@ describe('commander', function () {
       )
     })
 
-    it('should emit event on instance searching', function (done) {
-      var cli = commander(pathToTempProject)
-      var instanceLookupCalled = false
-      var instanceFoundCalled = false
-      var instanceInEvent
-      var instanceInHandler
+    it('should emit event on instance searching', (done) => {
+      const cli = commander(pathToTempProject)
+      let instanceLookupCalled = false
+      let instanceFoundCalled = false
+      let instanceInEvent
+      let instanceInHandler
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function (argv) {
@@ -96,18 +94,16 @@ describe('commander', function () {
 
       cli.registerCommand(testCommand)
 
-      cli.on('instance.lookup', function () {
-        instanceLookupCalled = true
-      })
+      cli.on('instance.lookup', () => (instanceLookupCalled = true))
 
-      cli.on('instance.found', function (instance) {
+      cli.on('instance.found', (instance) => {
         instanceFoundCalled = true
         instanceInEvent = instance
       })
 
-      cli.on('command.success', function (cmdName, result) {
+      cli.on('command.success', (cmdName, result) => {
         setTimeout(function () {
-          var exitCode
+          let exitCode
 
           stdMocks.restore()
           stdMocks.flush()
@@ -148,13 +144,13 @@ describe('commander', function () {
     })
 
     it('should emit event when using a default instance', function (done) {
-      var cli = commander(pathToTempProject)
-      var instanceLookupCalled = false
-      var instanceDefaultCalled = false
-      var instanceInEvent
-      var instanceInHandler
+      const cli = commander(pathToTempProject)
+      let instanceLookupCalled = false
+      let instanceDefaultCalled = false
+      let instanceInEvent
+      let instanceInHandler
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function (argv) {
@@ -165,18 +161,16 @@ describe('commander', function () {
 
       cli.registerCommand(testCommand)
 
-      cli.on('instance.lookup', function () {
-        instanceLookupCalled = true
-      })
+      cli.on('instance.lookup', () => (instanceLookupCalled = true))
 
-      cli.on('instance.default', function (instance) {
+      cli.on('instance.default', (instance) => {
         instanceDefaultCalled = true
         instanceInEvent = instance
       })
 
-      cli.on('command.success', function (cmdName, result) {
-        setTimeout(function () {
-          var exitCode
+      cli.on('command.success', (cmdName, result) => {
+        setTimeout(() => {
+          let exitCode
 
           stdMocks.restore()
           stdMocks.flush()
@@ -203,12 +197,12 @@ describe('commander', function () {
       cli.start(['test'])
     })
 
-    it('should emit event on instance initialization', function (done) {
-      var cli = commander(pathToTempProject)
-      var instanceInitializingCalled = false
-      var instanceInHandler
+    it('should emit event on instance initialization', (done) => {
+      const cli = commander(pathToTempProject)
+      let instanceInitializingCalled = false
+      let instanceInHandler
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
         handler: function (argv) {
@@ -219,13 +213,11 @@ describe('commander', function () {
 
       cli.registerCommand(testCommand)
 
-      cli.on('instance.initializing', function () {
-        instanceInitializingCalled = true
-      })
+      cli.on('instance.initializing', () => (instanceInitializingCalled = true))
 
-      cli.on('instance.initialized', function (result) {
-        setTimeout(function () {
-          var exitCode
+      cli.on('instance.initialized', (result) => {
+        setTimeout(() => {
+          let exitCode
 
           stdMocks.restore()
           stdMocks.flush()

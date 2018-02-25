@@ -1,12 +1,10 @@
-'use strict'
+const path = require('path')
+const fs = require('fs')
+const should = require('should')
+const utils = require('../utils')
+const repair = require('../../lib/commands/repair').handler
 
-var path = require('path')
-var fs = require('fs')
-var should = require('should')
-var utils = require('../utils')
-var repair = require('../../lib/commands/repair').handler
-
-var TEMP_DIRS = [
+const TEMP_DIRS = [
   'repair-empty',
   'repair-with-specific-version',
   'repair-packagejson-only',
@@ -77,7 +75,7 @@ describe('repair command', function () {
     // couple of minutes
     this.timeout(0)
 
-    var dir = utils.getTempDir('repair-empty')
+    const dir = utils.getTempDir('repair-empty')
 
     return (
       repair({ context: { cwd: dir } })
@@ -97,8 +95,8 @@ describe('repair command', function () {
     // couple of minutes
     this.timeout(0)
 
-    var dir = utils.getTempDir('repair-with-specific-version')
-    var versionToInstall = '1.3.0'
+    const dir = utils.getTempDir('repair-with-specific-version')
+    const versionToInstall = '1.3.0'
 
     return (
       repair({ context: { cwd: dir }, _: [null, versionToInstall] })
@@ -122,7 +120,7 @@ describe('repair command', function () {
     // couple of minutes
     this.timeout(0)
 
-    var dir = utils.getTempDir('repair-packagejson-only')
+    const dir = utils.getTempDir('repair-packagejson-only')
 
     return (
       repair({ context: { cwd: dir } })
@@ -145,7 +143,7 @@ describe('repair command', function () {
     // couple of minutes
     this.timeout(0)
 
-    var dir = utils.getTempDir('repair-packagejson-with-server')
+    const dir = utils.getTempDir('repair-packagejson-with-server')
 
     return (
       repair({ context: { cwd: dir } })
@@ -171,7 +169,7 @@ describe('repair command', function () {
     // couple of minutes
     this.timeout(0)
 
-    var dir = utils.getTempDir('repair-packagejson-with-config')
+    const dir = utils.getTempDir('repair-packagejson-with-config')
 
     return (
       repair({ context: { cwd: dir } })
@@ -193,7 +191,5 @@ describe('repair command', function () {
     )
   })
 
-  after(function () {
-    utils.cleanTempDir(TEMP_DIRS)
-  })
+  after(() => utils.cleanTempDir(TEMP_DIRS))
 })

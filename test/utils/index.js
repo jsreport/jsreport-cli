@@ -1,11 +1,9 @@
-'use strict'
-
-var path = require('path')
-var mkdirp = require('mkdirp')
-var rimraf = require('rimraf')
-var fs = require('fs')
-var childProcess = require('child_process')
-var mockProcessExit = require('./mockProcessExit')
+const path = require('path')
+const mkdirp = require('mkdirp')
+const rimraf = require('rimraf')
+const fs = require('fs')
+const childProcess = require('child_process')
+const mockProcessExit = require('./mockProcessExit')
 
 function getTempDir (dir) {
   return path.join(__dirname, '../temp', dir)
@@ -13,7 +11,7 @@ function getTempDir (dir) {
 
 function createTempDir (dirs, visitor) {
   dirs.forEach(function (dir) {
-    var absoluteDir = getTempDir(dir)
+    const absoluteDir = getTempDir(dir)
 
     mkdirp.sync(absoluteDir)
 
@@ -24,7 +22,7 @@ function createTempDir (dirs, visitor) {
 function cleanTempDir (dirs) {
   try {
     dirs.forEach(function (dir) {
-      var fullDir = getTempDir(dir)
+      const fullDir = getTempDir(dir)
       fs.readdirSync(fullDir).forEach(function (d) {
         // omit node_modules from cleaning to speed up the tests
         if (d !== 'node_modules') {

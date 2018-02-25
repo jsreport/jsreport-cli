@@ -1,15 +1,13 @@
-'use strict'
+const path = require('path')
+const fs = require('fs')
+const childProcess = require('child_process')
+const should = require('should')
+const utils = require('../../utils')
+const winUninstall = require('../../../lib/commands/win-uninstall').handler
 
-var path = require('path')
-var fs = require('fs')
-var childProcess = require('child_process')
-var should = require('should')
-var utils = require('../../utils')
-var winUninstall = require('../../../lib/commands/win-uninstall').handler
+const IS_WINDOWS = process.platform === 'win32'
 
-var IS_WINDOWS = process.platform === 'win32'
-
-var TEMP_DIRS = [
+const TEMP_DIRS = [
   'win-uninstall-empty',
   'win-uninstall-packagejson-only',
   'win-uninstall-packagejson-ok'
@@ -20,10 +18,10 @@ describe('win-uninstall command', function () {
   // couple of seconds
   this.timeout(0)
 
-  before(function () {
+  before(() => {
     utils.cleanTempDir(TEMP_DIRS)
 
-    utils.createTempDir(TEMP_DIRS, function (dir, absoluteDir) {
+    utils.createTempDir(TEMP_DIRS, (dir, absoluteDir) => {
       switch (dir) {
         case 'win-uninstall-packagejson-only':
           fs.writeFileSync(
@@ -54,9 +52,9 @@ describe('win-uninstall command', function () {
     })
   })
 
-  it('should not work on empty directory', function () {
-    var dir = utils.getTempDir('win-uninstall-empty')
-    var uninstallAsync = winUninstall({ context: { cwd: dir } })
+  it('should not work on empty directory', () => {
+    const dir = utils.getTempDir('win-uninstall-empty')
+    const uninstallAsync = winUninstall({ context: { cwd: dir } })
 
     if (!IS_WINDOWS) {
       should(uninstallAsync).be.fulfilledWith({ uninstalled: false, serviceName: null })
@@ -65,9 +63,9 @@ describe('win-uninstall command', function () {
     }
   })
 
-  it('should not work on directory with package.json without name field', function () {
-    var dir = utils.getTempDir('win-uninstall-packagejson-only')
-    var uninstallAsync = winUninstall({ context: { cwd: dir } })
+  it('should not work on directory with package.json without name field', () => {
+    const dir = utils.getTempDir('win-uninstall-packagejson-only')
+    const uninstallAsync = winUninstall({ context: { cwd: dir } })
 
     if (!IS_WINDOWS) {
       should(uninstallAsync).be.fulfilledWith({ uninstalled: false, serviceName: null })
@@ -81,15 +79,14 @@ describe('win-uninstall command', function () {
     // couple of minutes
     this.timeout(0)
 
-    var dir = utils.getTempDir('win-uninstall-packagejson-ok')
-    var uninstallAsync
+    const dir = utils.getTempDir('win-uninstall-packagejson-ok')
 
     if (!IS_WINDOWS) {
       return done()
     }
 
     utils.npmInstall(dir, function (error) {
-      var pathToWinser = path.join(__dirname, '../../node_modules/.bin/winser.cmd')
+      const pathToWinser = path.join(__dirname, '../../node_modules/.bin/winser.cmd')
 
       if (error) {
         return done(error)
@@ -104,10 +101,10 @@ describe('win-uninstall command', function () {
           return done(error)
         }
 
-        uninstallAsync = winUninstall({ context: { cwd: dir } })
+        const uninstallAsync = winUninstall({ context: { cwd: dir } })
 
         uninstallAsync
-          .then(function (serviceInfo) {
+          .then((serviceInfo) => {
             if (!IS_WINDOWS) {
               should(serviceInfo.uninstalled).be.eql(false)
               return done()
@@ -115,7 +112,7 @@ describe('win-uninstall command', function () {
 
             childProcess.exec('sc query "' + serviceInfo.serviceName + '"', {
               cwd: dir
-            }, function (error, stdout) {
+            }, (error, stdout) => {
               if (error) {
                 should(serviceInfo.serviceName).be.eql('jsreport-server-for-uninstall')
                 return done()
@@ -129,7 +126,5 @@ describe('win-uninstall command', function () {
     })
   })
 
-  after(function () {
-    utils.cleanTempDir(TEMP_DIRS)
-  })
+  after(() => utils.cleanTempDir(TEMP_DIRS))
 })
