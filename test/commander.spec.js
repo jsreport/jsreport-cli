@@ -434,16 +434,11 @@ describe('commander', () => {
   })
 
   describe('when starting', () => {
-    it('should fail on invalid arguments', () => {
+    it('should fail on invalid arguments', async () => {
       const cli = commander()
 
-      should(function startCommander () {
-        cli.start()
-      }).throw()
-
-      should(function startCommander () {
-        cli.start(null)
-      }).throw()
+      await cli.start().should.be.rejected()
+      await cli.start(null).should.be.rejected()
     })
 
     it('should print help by default when command is not present', (done) => {

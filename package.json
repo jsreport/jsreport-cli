@@ -7,7 +7,7 @@
     "jsreport": "cli.js"
   },
   "scripts": {
-    "test": "mocha --recursive \"./test/commander.spec.js\" \"./test/commands/**/*.spec.js\" --timeout 10000 --exit && standard",
+    "test": "mocha --recursive \"./test/commander.spec.js\" \"./test/commands/**/*.spec.js\" --timeout 10000 --exit",
     "test-integration": "mocha --recursive \"./test/integration/**/*.spec.js\" --timeout 10000",
     "test:watch": "mocha --recursive \"./test/commander.spec.js\" \"./test/commands/**/*.spec.js\" --timeout --exit 7000 --watch",
     "prepublish": "in-publish && standard || not-in-publish"
@@ -55,7 +55,7 @@
     "ip-address": "5.8.9",
     "is-absolute-url": "2.1.0",
     "is-promise": "2.1.0",
-    "jsreport-client": "0.4.1",
+    "jsreport-client": "jsreport/nodejs-client#2.0.0-beta",
     "liftoff": "2.5.0",
     "map-async": "0.1.1",
     "nanoid": "1.0.2",

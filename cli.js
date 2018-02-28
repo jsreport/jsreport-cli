@@ -1,15 +1,15 @@
 #!/usr/bin/env node
-var path = require('path')
-var semver = require('semver')
-var Liftoff = require('liftoff')
-var commander = require('./lib/commander')
-var init = require('./lib/commands/init')
-var repair = require('./lib/commands/repair')
-var configure = require('./lib/commands/configure')
-var render = require('./lib/commands/render')
-var cliPackageJson = require('./package.json')
+const path = require('path')
+const semver = require('semver')
+const Liftoff = require('liftoff')
+const commander = require('./lib/commander')
+const init = require('./lib/commands/init')
+const repair = require('./lib/commands/repair')
+const configure = require('./lib/commands/configure')
+const render = require('./lib/commands/render')
+const cliPackageJson = require('./package.json')
 
-var cli = new Liftoff({
+const cli = new Liftoff({
   processTitle: 'jsreport',
   moduleName: 'jsreport-cli',
   configName: '.jsreport'
@@ -18,19 +18,19 @@ var cli = new Liftoff({
 cli.launch({}, initCLI)
 
 function initCLI (env) {
-  var args = process.argv.slice(2)
-  var cwd = process.cwd()
-  var localCommander
+  const args = process.argv.slice(2)
+  const cwd = process.cwd()
+  let localCommander
 
   if (!env.modulePath) {
     // if no local installation is found,
     // try to detect if some global command was specified
-    var globalCliHandler = commander(cwd, {
+    const globalCliHandler = commander(cwd, {
       builtInCommands: [init, repair, configure, render],
       ignoreEntryPointCommands: ['init', 'repair', 'configure', 'render']
     })
 
-    globalCliHandler.on('started', function (err, info) {
+    globalCliHandler.on('started', (err, info) => {
       if (err) {
         console.error(err.message)
         return process.exit(1)
