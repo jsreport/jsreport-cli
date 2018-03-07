@@ -7,7 +7,7 @@
     "jsreport": "cli.js"
   },
   "scripts": {
-    "test": "mocha --recursive \"./test/commander.spec.js\" \"./test/commands/**/*.spec.js\" --timeout 10000 --exit",
+    "test": "mocha --recursive \"./test/commander.spec.js\" \"./test/cli/cli.spec.js\" \"./test/commands/**/*.spec.js\" --timeout 10000 --exit",
     "test-integration": "mocha --recursive \"./test/integration/**/*.spec.js\" --timeout 10000",
     "test:watch": "mocha --recursive \"./test/commander.spec.js\" \"./test/commands/**/*.spec.js\" --timeout --exit 7000 --watch",
     "prepublish": "in-publish && standard || not-in-publish"
