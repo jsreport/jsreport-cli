@@ -17,7 +17,7 @@ const originalDevConfig = {
   }
 }
 
-module.exports.exec = (cmd) => execSync(`node ${process.env.debugCLI ? '--inspect-brk' : ''} runner.js ${cmd}`, { env: { DEBUG: 'jsreport' }, cwd: cwd }).toString()
+module.exports.exec = (cmd) => execSync(`${process.execPath}${process.env.debugCLI ? ' --inspect-brk' : ''} runner.js ${cmd}`, { env: { DEBUG: 'jsreport' }, cwd: cwd }).toString()
 module.exports.cwd = cwd
 
 let clean = module.exports.clean = function (done) {
@@ -52,7 +52,7 @@ let clean = module.exports.clean = function (done) {
     fs.writeFileSync(
       path.join(absoluteDir, './server.js'),
       [
-        'var jsreport = require("jsreport")()',
+        'const jsreport = require("jsreport")()',
         'if (require.main !== module) {',
         'module.exports = jsreport',
         '} else {',

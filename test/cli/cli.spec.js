@@ -3,16 +3,16 @@ const fs = require('fs')
 const should = require('should')
 const { init, clean, cwd, exec } = require('./utils')
 
-describe.only('cli', () => {
+describe('cli', () => {
   before(init)
   beforeEach(clean)
 
-  it('--version should return versoin', () => {
-    exec('--version').should.match(/jsreport version/)
+  it('--version should return version', () => {
+    exec('--version').should.match(/cli version/)
   })
 
-  it('--help should return versoin', () => {
-    exec('--help').should.match(/USAGE: jsreport/)
+  it('--help should return message', () => {
+    exec('--help').should.match(/Usage: jsreport/)
   })
 
   it('render should write to output file', () => {

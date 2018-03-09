@@ -1,6 +1,5 @@
 const path = require('path')
 const fs = require('fs')
-const Promise = require('bluebird')
 const inquirer = require('inquirer')
 const should = require('should')
 const sinon = require('sinon')

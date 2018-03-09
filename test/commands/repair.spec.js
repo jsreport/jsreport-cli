@@ -17,10 +17,10 @@ describe('repair command', function () {
   // couple of seconds
   this.timeout(0)
 
-  before(function () {
+  before(() => {
     utils.cleanTempDir(TEMP_DIRS)
 
-    utils.createTempDir(TEMP_DIRS, function (dir, absoluteDir) {
+    utils.createTempDir(TEMP_DIRS, (dir, absoluteDir) => {
       switch (dir) {
         case 'repair-packagejson-only':
           fs.writeFileSync(
@@ -70,27 +70,24 @@ describe('repair command', function () {
     })
   })
 
-  it('should work on empty directory', function () {
+  it('should work on empty directory', async function () {
     // disabling timeout because npm install could take a
     // couple of minutes
     this.timeout(0)
 
     const dir = utils.getTempDir('repair-empty')
 
-    return (
-      repair({ context: { cwd: dir } })
-        .then(function (jsreportPackage) {
-        // should install jsreport package
-          should(fs.existsSync(path.join(dir, 'node_modules/' + jsreportPackage.name))).be.eql(true)
-          // and generate default files
-          should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-          should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
-          should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
-        })
-    )
+    const jsreportPackage = await repair({ context: { cwd: dir } })
+
+    // should install jsreport package
+    should(fs.existsSync(path.join(dir, 'node_modules/' + jsreportPackage.name))).be.eql(true)
+    // and generate default files
+    should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
+    should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
+    should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
   })
 
-  it('should work with specific jsreport version', function () {
+  it('should work with specific jsreport version', async function () {
     // disabling timeout because npm install could take a
     // couple of minutes
     this.timeout(0)
@@ -98,97 +95,85 @@ describe('repair command', function () {
     const dir = utils.getTempDir('repair-with-specific-version')
     const versionToInstall = '1.3.0'
 
-    return (
-      repair({ context: { cwd: dir }, _: [null, versionToInstall] })
-        .then(function (jsreportPackage) {
-        // should install jsreport package
-          should(fs.existsSync(path.join(dir, 'node_modules/' + jsreportPackage.name))).be.eql(true)
-          // and generate default files
-          should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-          should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
-          should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
+    const jsreportPackage = await repair({ context: { cwd: dir }, _: [null, versionToInstall] })
 
-          should(JSON.parse(
-            fs.readFileSync(path.join(dir, 'package.json')).toString()
-          ).dependencies.jsreport).endWith(versionToInstall)
-        })
-    )
+    // should install jsreport package
+    should(fs.existsSync(path.join(dir, 'node_modules/' + jsreportPackage.name))).be.eql(true)
+    // and generate default files
+    should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
+    should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
+    should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
+
+    should(JSON.parse(
+      fs.readFileSync(path.join(dir, 'package.json')).toString()
+    ).dependencies.jsreport).endWith(versionToInstall)
   })
 
-  it('should work on a directory that contains only package.json', function () {
+  it('should work on a directory that contains only package.json', async function () {
     // disabling timeout because npm install could take a
     // couple of minutes
     this.timeout(0)
 
     const dir = utils.getTempDir('repair-packagejson-only')
 
-    return (
-      repair({ context: { cwd: dir } })
-        .then(function (jsreportPackage) {
-        // should generate default files
-          should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-          should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
-          // and replace package.json in dir
-          should(
-            JSON.parse(
-              fs.readFileSync(path.join(dir, 'package.json')).toString()
-            ).name
-          ).be.eql('jsreport-server')
-        })
-    )
+    const jsreportPackage = await repair({ context: { cwd: dir } })
+
+    // should generate default files
+    should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
+    should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
+    // and replace package.json in dir
+    should(
+      JSON.parse(
+        fs.readFileSync(path.join(dir, 'package.json')).toString()
+      ).name
+    ).be.eql('jsreport-server')
   })
 
-  it('should override server.js file', function () {
+  it('should override server.js file', async function () {
     // disabling timeout because npm install could take a
     // couple of minutes
     this.timeout(0)
 
     const dir = utils.getTempDir('repair-packagejson-with-server')
 
-    return (
-      repair({ context: { cwd: dir } })
-        .then(function (jsreportPackage) {
-        // should generate default files
-          should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
-          // replace package.json in dir
-          should(
-            JSON.parse(
-              fs.readFileSync(path.join(dir, 'package.json')).toString()
-            ).name
-          ).be.eql('jsreport-server')
-          // and replace server.js
-          should(
-            fs.readFileSync(path.join(dir, 'server.js')).toString().trim()
-          ).be.not.eql('require("jsreport")().init()')
-        })
-    )
+    await repair({ context: { cwd: dir } })
+
+    // should generate default files
+    should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
+    // replace package.json in dir
+    should(
+      JSON.parse(
+        fs.readFileSync(path.join(dir, 'package.json')).toString()
+      ).name
+    ).be.eql('jsreport-server')
+    // and replace server.js
+    should(
+      fs.readFileSync(path.join(dir, 'server.js')).toString().trim()
+    ).be.not.eql('require("jsreport")().init()')
   })
 
-  it('should override jsreport.config.json file', function () {
+  it('should override jsreport.config.json file', async function () {
     // disabling timeout because npm install could take a
     // couple of minutes
     this.timeout(0)
 
     const dir = utils.getTempDir('repair-packagejson-with-config')
 
-    return (
-      repair({ context: { cwd: dir } })
-        .then(function (jsreportPackage) {
-        // should generate default files
-          should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
-          should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-          // replace package.json in dir
-          should(
-            JSON.parse(
-              fs.readFileSync(path.join(dir, 'package.json')).toString()
-            ).name
-          ).be.eql('jsreport-server')
-          // and replace jsreport.config.json
-          should(
-            fs.readFileSync(path.join(dir, 'jsreport.config.json')).toString().trim()
-          ).be.not.eql('{"connectionString": { "name": "fs" }}')
-        })
-    )
+    await repair({ context: { cwd: dir } })
+
+    // should generate default files
+    should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
+    should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
+    // replace package.json in dir
+    should(
+      JSON.parse(
+        fs.readFileSync(path.join(dir, 'package.json')).toString()
+      ).name
+    ).be.eql('jsreport-server')
+    // and replace jsreport.config.json
+    should(
+      fs.readFileSync(path.join(dir, 'jsreport.config.json')).toString().trim()
+    ).be.not.eql('{"connectionString": { "name": "fs" }}')
   })
 
   after(() => utils.cleanTempDir(TEMP_DIRS))

@@ -14,6 +14,6 @@ See http://jsreport.net/learn/cli for documentation
 You can apply this extension also manually to [jsreport-core](https://github.com/jsreport/jsreport-core)
 
 ```js
-var jsreport = require('jsreport-core')()
+const jsreport = require('jsreport-core')()
 jsreport.use(require('jsreport-cli')({}))
 ```

@@ -2,7 +2,6 @@ const path = require('path')
 const fs = require('fs')
 const childProcess = require('child_process')
 const should = require('should')
-const assign = require('object-assign')
 const stdMocks = require('std-mocks')
 const utils = require('../utils')
 const commander = require('../../lib/commander')
@@ -26,7 +25,7 @@ describe('commander', () => {
 
       utils.cleanTempDir(['commander-project'])
 
-      utils.createTempDir(['commander-project'], function (dir, absoluteDir) {
+      utils.createTempDir(['commander-project'], (dir, absoluteDir) => {
         pathToTempProject = absoluteDir
 
         fs.writeFileSync(
@@ -37,7 +36,7 @@ describe('commander', () => {
         fs.writeFileSync(
           path.join(absoluteDir, './server.js'),
           [
-            'var jsreport = require("jsreport")()',
+            'const jsreport = require("jsreport")()',
             'if (require.main !== module) {',
             'module.exports = jsreport',
             '} else {',
@@ -55,7 +54,7 @@ describe('commander', () => {
 
       childProcess.exec('npm install', {
         cwd: pathToTempProject
-      }, function (error, stdout, stderr) {
+      }, (error, stdout, stderr) => {
         if (error) {
           console.log('error while installing dependencies for test suite...')
           return done(error)
@@ -86,7 +85,7 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function (argv) {
+        handler: (argv) => {
           instanceInHandler = argv.context.jsreport
           return instanceInHandler
         }
@@ -102,7 +101,7 @@ describe('commander', () => {
       })
 
       cli.on('command.success', (cmdName, result) => {
-        setTimeout(function () {
+        setTimeout(() => {
           let exitCode
 
           stdMocks.restore()
@@ -131,7 +130,7 @@ describe('commander', () => {
       fs.writeFileSync(
         path.join(pathToTempProject, './package.json'),
         JSON.stringify(
-          assign({
+          Object.assign({
             jsreport: {
               entryPoint: 'server.js'
             }
@@ -153,7 +152,7 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function (argv) {
+        handler: (argv) => {
           instanceInHandler = argv.context.jsreport
           return instanceInHandler
         }
@@ -205,7 +204,7 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function (argv) {
+        handler: (argv) => {
           instanceInHandler = argv.context.jsreport
           return instanceInHandler
         }

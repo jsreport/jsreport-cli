@@ -85,7 +85,7 @@ describe('win-uninstall command', function () {
       return done()
     }
 
-    utils.npmInstall(dir, function (error) {
+    utils.npmInstall(dir, (error) => {
       const pathToWinser = path.join(__dirname, '../../node_modules/.bin/winser.cmd')
 
       if (error) {

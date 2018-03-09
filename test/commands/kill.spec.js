@@ -24,7 +24,7 @@ describe('kill command', () => {
 
     utils.cleanTempDir(['kill-project'])
 
-    utils.createTempDir(['kill-project'], function (dir, absoluteDir) {
+    utils.createTempDir(['kill-project'], (dir, absoluteDir) => {
       pathToTempProject = absoluteDir
 
       fs.writeFileSync(
@@ -50,7 +50,7 @@ describe('kill command', () => {
       fs.writeFileSync(
         path.join(absoluteDir, './server.js'),
         [
-          'var jsreport = require("jsreport")()',
+          'const jsreport = require("jsreport")()',
           'if (require.main !== module) {',
           'module.exports = jsreport',
           '} else {',

@@ -28,7 +28,7 @@ describe('start command', () => {
 
     utils.cleanTempDir(['start-project'])
 
-    utils.createTempDir(['start-project'], function (dir, absoluteDir) {
+    utils.createTempDir(['start-project'], (dir, absoluteDir) => {
       pathToTempProject = absoluteDir
 
       fs.writeFileSync(
@@ -54,7 +54,7 @@ describe('start command', () => {
       fs.writeFileSync(
         path.join(absoluteDir, './server.js'),
         [
-          'var jsreport = require("jsreport")()',
+          'const jsreport = require("jsreport")()',
           'if (require.main !== module) {',
           'module.exports = jsreport',
           '} else {',

@@ -10,7 +10,7 @@ function getTempDir (dir) {
 }
 
 function createTempDir (dirs, visitor) {
-  dirs.forEach(function (dir) {
+  dirs.forEach((dir) => {
     const absoluteDir = getTempDir(dir)
 
     mkdirp.sync(absoluteDir)
@@ -21,9 +21,9 @@ function createTempDir (dirs, visitor) {
 
 function cleanTempDir (dirs) {
   try {
-    dirs.forEach(function (dir) {
+    dirs.forEach((dir) => {
       const fullDir = getTempDir(dir)
-      fs.readdirSync(fullDir).forEach(function (d) {
+      fs.readdirSync(fullDir).forEach((d) => {
         // omit node_modules from cleaning to speed up the tests
         if (d !== 'node_modules') {
           rimraf.sync(path.join(fullDir, d))
@@ -44,7 +44,7 @@ function npmInstall (cwd, cb) {
 
   childProcess.exec('npm install', {
     cwd: cwd
-  }, function (error, stdout, stderr) {
+  }, (error, stdout, stderr) => {
     if (error) {
       console.log('error while installing dependencies for test suite...')
       return cb(error)

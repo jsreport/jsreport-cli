@@ -1,5 +1,4 @@
 const should = require('should')
-const Promise = require('bluebird')
 const stdMocks = require('std-mocks')
 const utils = require('./utils')
 const commander = require('../lib/commander')
@@ -37,11 +36,11 @@ describe('commander', () => {
       const commands = [{
         command: 'push',
         description: 'push command',
-        handler: function () {}
+        handler: () => {}
       }, {
         command: 'pull',
         description: 'pull command',
-        handler: function () {}
+        handler: () => {}
       }]
 
       const cli = commander(undefined, { builtInCommands: commands })
@@ -53,11 +52,11 @@ describe('commander', () => {
       const commands = [{
         command: 'push',
         description: 'push command',
-        handler: function () {}
+        handler: () => {}
       }, {
         command: 'pull',
         description: 'pull command',
-        handler: function () {}
+        handler: () => {}
       }]
 
       const cli = commander(undefined, { builtInCommands: commands, disabledCommands: ['push'] })
@@ -89,7 +88,7 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function () {}
+        handler: () => {}
       }
 
       cli.registerCommand(testCommand)
@@ -104,7 +103,7 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function () {}
+        handler: () => {}
       }
 
       const returnValue = cli.registerCommand(testCommand)
@@ -118,10 +117,10 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function () {}
+        handler: () => {}
       }
 
-      cli.on('command.register', function (cmdName, cmdModule) {
+      cli.on('command.register', (cmdName, cmdModule) => {
         should(cmdName).be.eql('test')
         should(cmdModule).be.exactly(testCommand)
         done()
@@ -138,14 +137,14 @@ describe('commander', () => {
       return should(cli.executeCommand('unknowCmd')).be.rejected()
     })
 
-    it('should pass arguments to command handler', () => {
+    it('should pass arguments to command handler', async () => {
       const cli = commander()
       let cmdArgs
 
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function (args) {
+        handler: (args) => {
           return args
         }
       }
@@ -158,12 +157,9 @@ describe('commander', () => {
         }
       })
 
-      return (
-        cli.executeCommand('test', { args: true })
-          .then(function (result) {
-            should(result).be.exactly(cmdArgs)
-          })
-      )
+      const result = await cli.executeCommand('test', { args: true })
+
+      should(result).be.exactly(cmdArgs)
     })
 
     it('should fail when command sync handler fails', () => {
@@ -172,7 +168,7 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function () {
+        handler: () => {
           throw new Error('error in handler')
         }
       }
@@ -192,36 +188,36 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function () {
+        handler: () => {
           throw new Error('error in handler')
         }
       }
 
       cli.registerCommand(testCommand)
 
-      cli.on('command.init', function (cmdName) {
+      cli.on('command.init', (cmdName) => {
         if (cmdName === 'test') {
           onInitCalled = true
         }
       })
 
-      cli.on('command.error', function (cmdName, error) {
+      cli.on('command.error', (cmdName, error) => {
         if (cmdName === 'test') {
           onErrorCalled = true
           errorInEvent = error
         }
       })
 
-      cli.on('command.finish', function (cmdName) {
+      cli.on('command.finish', (cmdName) => {
         if (cmdName === 'test') {
           onFinishCalled = true
         }
       })
 
       return cli.executeCommand('test')
-        .then(function () {
+        .then(() => {
           throw new Error('command should have failed')
-        }, function (err) {
+        }, (err) => {
           should(err).be.Error()
           should(err).be.exactly(errorInEvent)
           should(err.message).be.eql('error in handler')
@@ -237,8 +233,8 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function () {
-          return new Promise(function (resolve, reject) {
+        handler: () => {
+          return new Promise((resolve, reject) => {
             reject(new Error('error in handler'))
           })
         }
@@ -259,8 +255,8 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function () {
-          return new Promise(function (resolve, reject) {
+        handler: () => {
+          return new Promise((resolve, reject) => {
             reject(new Error('error in handler'))
           })
         }
@@ -289,9 +285,9 @@ describe('commander', () => {
 
       return (
         cli.executeCommand('test')
-          .then(function () {
+          .then(() => {
             throw new Error('command should have failed')
-          }, function (err) {
+          }, (err) => {
             should(err).be.Error()
             should(err).be.exactly(errorInEvent)
             should(err.message).be.eql('error in handler')
@@ -308,7 +304,7 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function () {
+        handler: () => {
           return true
         }
       }
@@ -328,7 +324,7 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function () {
+        handler: () => {
           return true
         }
       }
@@ -356,7 +352,7 @@ describe('commander', () => {
 
       return (
         cli.executeCommand('test')
-          .then(function (result) {
+          .then((result) => {
             should(result).be.exactly(successValueInEvent)
             should(onInitCalled).be.eql(true)
             should(onSuccessCalled).be.eql(true)
@@ -371,8 +367,8 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function () {
-          return new Promise(function (resolve, reject) {
+        handler: () => {
+          return new Promise((resolve, reject) => {
             resolve(true)
           })
         }
@@ -393,8 +389,8 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function () {
-          return new Promise(function (resolve) {
+        handler: () => {
+          return new Promise((resolve) => {
             resolve(true)
           })
         }
@@ -402,20 +398,20 @@ describe('commander', () => {
 
       cli.registerCommand(testCommand)
 
-      cli.on('command.init', function (cmdName) {
+      cli.on('command.init', (cmdName) => {
         if (cmdName === 'test') {
           onInitCalled = true
         }
       })
 
-      cli.on('command.success', function (cmdName, value) {
+      cli.on('command.success', (cmdName, value) => {
         if (cmdName === 'test') {
           onSuccessCalled = true
           successValueInEvent = value
         }
       })
 
-      cli.on('command.finish', function (cmdName) {
+      cli.on('command.finish', (cmdName) => {
         if (cmdName === 'test') {
           onFinishCalled = true
         }
@@ -423,7 +419,7 @@ describe('commander', () => {
 
       return (
         cli.executeCommand('test')
-          .then(function (result) {
+          .then((result) => {
             should(result).be.exactly(successValueInEvent)
             should(onInitCalled).be.eql(true)
             should(onSuccessCalled).be.eql(true)
@@ -434,11 +430,16 @@ describe('commander', () => {
   })
 
   describe('when starting', () => {
-    it('should fail on invalid arguments', async () => {
+    it('should fail on invalid arguments', () => {
       const cli = commander()
 
-      await cli.start().should.be.rejected()
-      await cli.start(null).should.be.rejected()
+      should(function startCommander () {
+        cli.start()
+      }).throw()
+
+      should(function startCommander () {
+        cli.start(null)
+      }).throw()
     })
 
     it('should print help by default when command is not present', (done) => {
@@ -489,8 +490,8 @@ describe('commander', () => {
       stdMocks.use()
       exitMock.enable()
 
-      cli.on('parsed', function () {
-        process.nextTick(function () {
+      cli.on('parsed', () => {
+        process.nextTick(() => {
           stdMocks.restore()
           exitMock.restore()
 
@@ -582,7 +583,7 @@ describe('commander', () => {
       const cli = commander()
       const cliArgs = ['unknown']
 
-      cli.on('parsed', (err) => {
+      cli.on('started', (err) => {
         process.nextTick(() => {
           stdMocks.restore()
           stdMocks.flush()
@@ -626,13 +627,13 @@ describe('commander', () => {
       cli.start(cliArgs)
     })
 
-    it('should handle a failing sync command', function (done) {
-      var cli = commander()
+    it('should handle a failing sync command', (done) => {
+      const cli = commander()
 
-      var testCommand = {
+      const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function () {
+        handler: () => {
           throw new Error('error testing')
         }
       }
@@ -666,7 +667,7 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function () {
+        handler: () => {
           return new Promise((resolve, reject) => reject(new Error('error testing')))
         }
       }
@@ -736,7 +737,7 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function () {
+        handler: () => {
           return new Promise((resolve, reject) => {
             console.log('test async output')
             resolve(true)
@@ -774,7 +775,7 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: function (argv) {
+        handler: (argv) => {
           return argv.context
         }
       }
