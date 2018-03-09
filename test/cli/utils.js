@@ -17,7 +17,7 @@ const originalDevConfig = {
   }
 }
 
-module.exports.exec = (cmd) => execSync(`${process.execPath}${process.env.debugCLI ? ' --inspect-brk' : ''} runner.js ${cmd}`, { env: { DEBUG: 'jsreport' }, cwd: cwd }).toString()
+module.exports.exec = (cmd) => execSync(`"${process.execPath}"${process.env.debugCLI ? ' --inspect-brk' : ''} runner.js ${cmd}`, { env: { DEBUG: 'jsreport' }, cwd: cwd }).toString()
 module.exports.cwd = cwd
 
 let clean = module.exports.clean = function (done) {
