@@ -125,7 +125,8 @@ describe('configure command', () => {
         serverAuthPassword: 'test-pass',
         connectionString: 'fs',
         accessLocalFiles: true,
-        createExamples: true
+        createExamples: true,
+        fastStrategies: true
       })
     )
 
@@ -145,7 +146,8 @@ describe('configure command', () => {
           enabled: true
         },
         scripts: {
-          timeout: 40000
+          timeout: 40000,
+          strategy: 'http-server'
         },
         'sample-template': {
           createSamples: true
@@ -166,7 +168,8 @@ describe('configure command', () => {
         error: { transport: 'file', level: 'error', filename: 'logs/error.log' }
       },
       templatingEngines: {
-        timeout: 10000
+        timeout: 10000,
+        strategy: 'http-server'
       }
     }
 
