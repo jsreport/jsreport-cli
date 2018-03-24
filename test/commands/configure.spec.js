@@ -24,7 +24,6 @@ describe('configure command', () => {
         serverEnabled: false,
         connectionString: 'memory',
         accessLocalFiles: false,
-        fastStrategies: false,
         createExamples: false
       })
     )
@@ -38,35 +37,29 @@ describe('configure command', () => {
     should(result.filePath).be.undefined()
 
     should(result.config).be.eql({
-      connectionString: {
-        name: 'memory'
+      renderingSource: 'untrusted',
+      store: {
+        provider: 'memory'
       },
-      blobStorage: 'inMemory',
+      blobStorage: {
+        provider: 'memory'
+      },
       logger: {
         console: { transport: 'console', level: 'debug' }
       },
-      express: {
-        enabled: false
+      extensions: {
+        express: {
+          enabled: false
+        },
+        scripts: {
+          timeout: 40000
+        }
       },
-      phantom: {
-        allowLocalFilesAccess: false,
-        strategy: 'dedicated-process',
-        timeout: 40000
-      },
-      electron: {
-        allowLocalFilesAccess: false,
-        strategy: 'dedicated-process',
-        timeout: 40000
-      },
-      tasks: {
-        strategy: 'dedicated-process',
+      templatingEngines: {
         timeout: 10000
       },
-      scripts: {
+      chrome: {
         timeout: 40000
-      },
-      'sample-template': {
-        createSamples: false
       }
     })
   })
@@ -78,7 +71,6 @@ describe('configure command', () => {
         serverEnabled: false,
         connectionString: 'memory',
         accessLocalFiles: false,
-        fastStrategies: false,
         createExamples: false
       })
     )
@@ -89,35 +81,29 @@ describe('configure command', () => {
       }
     })
     const expectedConfig = {
-      connectionString: {
-        name: 'memory'
+      renderingSource: 'untrusted',
+      store: {
+        provider: 'memory'
       },
-      blobStorage: 'inMemory',
+      blobStorage: {
+        provider: 'memory'
+      },
       logger: {
         console: { transport: 'console', level: 'debug' }
       },
-      express: {
-        enabled: false
+      extensions: {
+        express: {
+          enabled: false
+        },
+        scripts: {
+          timeout: 40000
+        }
       },
-      phantom: {
-        allowLocalFilesAccess: false,
-        strategy: 'dedicated-process',
-        timeout: 40000
-      },
-      electron: {
-        allowLocalFilesAccess: false,
-        strategy: 'dedicated-process',
-        timeout: 40000
-      },
-      tasks: {
-        strategy: 'dedicated-process',
+      templatingEngines: {
         timeout: 10000
       },
-      scripts: {
+      chrome: {
         timeout: 40000
-      },
-      'sample-template': {
-        createSamples: false
       }
     }
 
@@ -139,7 +125,6 @@ describe('configure command', () => {
         serverAuthPassword: 'test-pass',
         connectionString: 'fs',
         accessLocalFiles: true,
-        fastStrategies: true,
         createExamples: true
       })
     )
@@ -152,45 +137,36 @@ describe('configure command', () => {
 
     const expectedConfig = {
       httpPort: 7500,
-      authentication: {
-        cookieSession: { secret: 'secret here' },
-        admin: { username: 'test', password: 'test-pass' },
-        enabled: true
+      renderingSource: 'trusted',
+      extensions: {
+        authentication: {
+          cookieSession: { secret: 'secret here' },
+          admin: { username: 'test', password: 'test-pass' },
+          enabled: true
+        },
+        scripts: {
+          timeout: 40000
+        },
+        'sample-template': {
+          createSamples: true
+        }
       },
-      connectionString: {
-        name: 'fs'
+      store: {
+        provider: 'fs'
       },
-      blobStorage: 'fileSystem',
+      blobStorage: {
+        provider: 'fs'
+      },
+      chrome: {
+        timeout: 40000
+      },
       logger: {
         console: { transport: 'console', level: 'debug' },
         file: { transport: 'file', level: 'info', filename: 'logs/reporter.log' },
         error: { transport: 'file', level: 'error', filename: 'logs/error.log' }
       },
-      phantom: {
-        allowLocalFilesAccess: true,
-        strategy: 'phantom-server',
-        timeout: 40000
-      },
-      electron: {
-        allowLocalFilesAccess: true,
-        strategy: 'electron-ipc',
-        timeout: 40000
-      },
-      tasks: {
-        strategy: 'http-server',
-        timeout: 10000,
-        allowedModules: '*'
-      },
-      scripts: {
-        timeout: 40000,
-        allowedModules: '*'
-      },
-      assets: {
-        allowedFiles: '*.*',
-        searchOnDiskIfNotFoundInStore: true
-      },
-      'sample-template': {
-        createSamples: true
+      templatingEngines: {
+        timeout: 10000
       }
     }
 
@@ -218,35 +194,29 @@ describe('configure command', () => {
     })
 
     const expectedConfig = {
-      connectionString: {
-        name: 'memory'
+      renderingSource: 'untrusted',
+      store: {
+        provider: 'memory'
       },
-      blobStorage: 'inMemory',
+      blobStorage: {
+        provider: 'memory'
+      },
       logger: {
         console: { transport: 'console', level: 'debug' }
       },
-      express: {
-        enabled: false
-      },
-      phantom: {
-        allowLocalFilesAccess: false,
-        strategy: 'dedicated-process',
-        timeout: 40000
-      },
-      electron: {
-        allowLocalFilesAccess: false,
-        strategy: 'dedicated-process',
-        timeout: 40000
-      },
-      tasks: {
-        strategy: 'dedicated-process',
+      templatingEngines: {
         timeout: 10000
       },
-      scripts: {
+      chrome: {
         timeout: 40000
       },
-      'sample-template': {
-        createSamples: false
+      extensions: {
+        express: {
+          enabled: false
+        },
+        scripts: {
+          timeout: 40000
+        }
       }
     }
 
