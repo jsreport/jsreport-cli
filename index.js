@@ -1,3 +1,5 @@
+'use strict'
+
 const commander = require('./lib/commander')
 const main = require('./lib/cliExtension')
 const config = require('./jsreport.config')

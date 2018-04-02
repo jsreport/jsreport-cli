@@ -85,6 +85,6 @@
     "winser-with-api": "1.0.1"
   },
   "engines": {
-    "node": ">=8.6"
+    "node": ">=8.9"
   }
 }
