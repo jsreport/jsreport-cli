@@ -10,7 +10,8 @@ if (!semver.satisfies(process.versions.node, cliPackageJson.engines.node)) {
     cliPackageJson.engines.node +
     ' but you have installed version ' + process.versions.node + '. please update your nodejs version and try again'
   )
-  return process.exit(1)
+
+  process.exit(1)
 }
 
 const path = require('path')
