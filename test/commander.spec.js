@@ -638,7 +638,16 @@ describe('commander', () => {
         }
       }
 
-      cli.registerCommand(testCommand)
+      cli.registerCommand(testCommand, { ignoreEntryPoint: true })
+
+      cli.on('started', (err) => {
+        if (err) {
+          stdMocks.restore()
+          stdMocks.flush()
+          exitMock.restore()
+          return done(err)
+        }
+      })
 
       cli.on('command.error', (cmdName, err) => {
         setTimeout(() => {
