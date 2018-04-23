@@ -17,6 +17,7 @@ if (!semver.satisfies(process.versions.node, cliPackageJson.engines.node)) {
 const path = require('path')
 const Liftoff = require('liftoff')
 const commander = require('./lib/commander')
+const { printErrorAndExit } = require('./lib/errorUtils')
 const init = require('./lib/commands/init')
 const repair = require('./lib/commands/repair')
 const configure = require('./lib/commands/configure')
@@ -45,8 +46,7 @@ function initCLI (env) {
 
     globalCliHandler.on('started', (err, info) => {
       if (err) {
-        console.error(err.message)
-        return process.exit(1)
+        return printErrorAndExit(err)
       }
 
       if (!info.handled) {
