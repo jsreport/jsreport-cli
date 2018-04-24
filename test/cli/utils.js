@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs')
 const execSync = require('child_process').execSync
+const jsreportVersionToTest = require('../jsreportVersionToTest')
 const utils = require('../utils')
 const cwd = path.join(__dirname, '..', 'temp', 'cli')
 
@@ -28,7 +29,7 @@ let clean = module.exports.clean = function (done) {
       JSON.stringify({
         name: 'cli-project',
         dependencies: {
-          jsreport: '*'
+          jsreport: jsreportVersionToTest
         },
         jsreport: {
           entryPoint: 'server.js'

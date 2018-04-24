@@ -5,6 +5,12 @@ const fs = require('fs')
 const childProcess = require('child_process')
 const mockProcessExit = require('./mockProcessExit')
 
+function tryCreate (dir) {
+  try {
+    fs.mkdirSync(dir, '0755')
+  } catch (ex) { }
+}
+
 function getTempDir (dir) {
   return path.join(__dirname, '../temp', dir)
 }
@@ -55,6 +61,7 @@ function npmInstall (cwd, cb) {
   })
 }
 
+exports.tryCreate = tryCreate
 exports.getTempDir = getTempDir
 exports.cleanTempDir = cleanTempDir
 exports.createTempDir = createTempDir

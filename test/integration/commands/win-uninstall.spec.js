@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs')
 const childProcess = require('child_process')
 const should = require('should')
+const jsreportVersionToTest = require('../../jsreportVersionToTest')
 const utils = require('../../utils')
 const winUninstall = require('../../../lib/commands/win-uninstall').handler
 
@@ -39,7 +40,7 @@ describe('win-uninstall command', function () {
               name: 'jsreport-server-for-uninstall',
               main: 'server.js',
               dependencies: {
-                jsreport: '*'
+                jsreport: jsreportVersionToTest
               }
             }, null, 2)
           )

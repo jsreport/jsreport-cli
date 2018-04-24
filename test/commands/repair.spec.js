@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs')
 const should = require('should')
+const jsreportVersionToTest = require('../jsreportVersionToTest')
 const utils = require('../utils')
 const repair = require('../../lib/commands/repair').handler
 
@@ -28,7 +29,7 @@ describe('repair command', function () {
             JSON.stringify({
               name: 'packagejson-only',
               dependencies: {
-                jsreport: '*'
+                jsreport: jsreportVersionToTest
               }
             }, null, 2)
           )
@@ -40,7 +41,7 @@ describe('repair command', function () {
             JSON.stringify({
               name: 'packagejson-with-server',
               dependencies: {
-                jsreport: '*'
+                jsreport: jsreportVersionToTest
               }
             }, null, 2)
           )
@@ -57,14 +58,14 @@ describe('repair command', function () {
             JSON.stringify({
               name: 'config',
               dependencies: {
-                jsreport: '*'
+                jsreport: jsreportVersionToTest
               }
             }, null, 2)
           )
 
           fs.writeFileSync(
             path.join(absoluteDir, './jsreport.config.json'),
-            '{"connectionString": { "name": "fs" }}'
+            '{"store": { "provider": "fs" }}'
           )
       }
     })
@@ -173,7 +174,7 @@ describe('repair command', function () {
     // and replace jsreport.config.json
     should(
       fs.readFileSync(path.join(dir, 'jsreport.config.json')).toString().trim()
-    ).be.not.eql('{"connectionString": { "name": "fs" }}')
+    ).be.not.eql('{"store": { "provider": "fs" }}')
   })
 
   after(() => utils.cleanTempDir(TEMP_DIRS))

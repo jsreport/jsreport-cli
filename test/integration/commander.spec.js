@@ -3,6 +3,7 @@ const fs = require('fs')
 const childProcess = require('child_process')
 const should = require('should')
 const stdMocks = require('std-mocks')
+const jsreportVersionToTest = require('../jsreportVersionToTest')
 const utils = require('../utils')
 const commander = require('../../lib/commander')
 const exitMock = utils.mockProcessExit
@@ -14,7 +15,7 @@ describe('commander', () => {
     const originalPkgJson = {
       name: 'commander-project',
       dependencies: {
-        jsreport: '*'
+        jsreport: jsreportVersionToTest
       }
     }
 

@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs')
 const should = require('should')
+const jsreportVersionToTest = require('../../jsreportVersionToTest')
 const utils = require('../../utils')
 const instanceHandler = require('../../../lib/instanceHandler')
 const start = require('../../../lib/commands/start').handler
@@ -36,7 +37,7 @@ describe('start command', () => {
         JSON.stringify({
           name: 'start-project',
           dependencies: {
-            jsreport: '*'
+            jsreport: jsreportVersionToTest
           },
           jsreport: {
             entryPoint: 'server.js'

@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs')
 const childProcess = require('child_process')
 const should = require('should')
+const jsreportVersionToTest = require('../../jsreportVersionToTest')
 const utils = require('../../utils')
 const winInstall = require('../../../lib/commands/win-install').handler
 
@@ -50,7 +51,7 @@ describe('win-install command', function () {
               name: 'jsreport-server-for-cli-testing',
               main: 'server.js',
               dependencies: {
-                jsreport: '*'
+                jsreport: jsreportVersionToTest
               }
             }, null, 2)
           )

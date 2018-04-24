@@ -17,13 +17,23 @@ describe('configure command', () => {
 
   beforeEach(() => (sandbox = sinon.sandbox.create()))
 
+  afterEach(() => {
+    if (fs.existsSync(path.join(pathToTempProject, 'jsreport.config.json'))) {
+      fs.unlinkSync(path.join(pathToTempProject, 'jsreport.config.json'))
+    }
+
+    sandbox.restore()
+  })
+
+  after(() => utils.cleanTempDir(['configure-project']))
+
   it('should just print configuration', async () => {
     sandbox.stub(inquirer, 'prompt').returns(
       Promise.resolve({
         env: 'dev',
         serverEnabled: false,
-        connectionString: 'memory',
-        accessLocalFiles: false,
+        store: 'memory',
+        renderingSource: false,
         createExamples: false
       })
     )
@@ -69,8 +79,8 @@ describe('configure command', () => {
       Promise.resolve({
         env: 'dev',
         serverEnabled: false,
-        connectionString: 'memory',
-        accessLocalFiles: false,
+        store: 'memory',
+        renderingSource: false,
         createExamples: false
       })
     )
@@ -123,8 +133,8 @@ describe('configure command', () => {
         serverAuthCookieSecret: 'secret here',
         serverAuthUsername: 'test',
         serverAuthPassword: 'test-pass',
-        connectionString: 'fs',
-        accessLocalFiles: true,
+        store: 'fs',
+        renderingSource: true,
         createExamples: true,
         fastStrategies: true
       })
@@ -183,8 +193,8 @@ describe('configure command', () => {
       Promise.resolve({
         env: 'prod',
         serverEnabled: false,
-        connectionString: 'memory',
-        accessLocalFiles: false,
+        store: 'memory',
+        renderingSource: false,
         fastStrategies: false,
         createExamples: false
       })
@@ -228,14 +238,4 @@ describe('configure command', () => {
     should(JSON.parse(fs.readFileSync(result.filePath).toString())).be.eql(expectedConfig)
     should(result.config).be.eql(expectedConfig)
   })
-
-  afterEach(() => {
-    if (fs.existsSync(path.join(pathToTempProject, 'jsreport.config.json'))) {
-      fs.unlinkSync(path.join(pathToTempProject, 'jsreport.config.json'))
-    }
-
-    sandbox.restore()
-  })
-
-  after(() => utils.cleanTempDir(['configure-project']))
 })

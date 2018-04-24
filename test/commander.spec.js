@@ -8,7 +8,7 @@ const exitMock = utils.mockProcessExit
 describe('commander', () => {
   describe('when initializing', () => {
     it('should initialize with default options', () => {
-      const defaultCommands = ['init', 'configure', 'start', 'win-install', 'render', 'repair', 'win-uninstall', 'kill']
+      const defaultCommands = ['help', 'init', 'configure', 'start', 'win-install', 'render', 'repair', 'win-uninstall', 'kill']
       const cli = commander()
 
       should(cli.cwd).be.eql(process.cwd())

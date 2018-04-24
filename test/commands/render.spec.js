@@ -3,15 +3,10 @@ const fs = require('fs')
 const childProcess = require('child_process')
 const should = require('should')
 const nanoid = require('nanoid')
+const jsreportVersionToTest = require('../jsreportVersionToTest')
 const utils = require('../utils')
 const instanceHandler = require('../../lib/instanceHandler')
 const render = require('../../lib/commands/render').handler
-
-function tryCreate (dir) {
-  try {
-    fs.mkdirSync(dir, '0755')
-  } catch (ex) { }
-}
 
 describe('render command', () => {
   let pathToTempProject
@@ -65,7 +60,7 @@ describe('render command', () => {
         JSON.stringify({
           name: 'render-project',
           dependencies: {
-            jsreport: '*'
+            jsreport: jsreportVersionToTest
           },
           jsreport: {
             entryPoint: 'server.js'
@@ -97,8 +92,8 @@ describe('render command', () => {
       pathToSocketDir = path.join(absoluteDir, 'sock-dir')
       pathToWorkerSocketDir = path.join(absoluteDir, 'workerSock-dir')
 
-      tryCreate(pathToSocketDir)
-      tryCreate(pathToWorkerSocketDir)
+      utils.tryCreate(pathToSocketDir)
+      utils.tryCreate(pathToWorkerSocketDir)
     })
 
     utils.npmInstall(pathToTempProject, done)
@@ -110,6 +105,26 @@ describe('render command', () => {
     delete require.cache[require.resolve(path.join(pathToTempProject, './jsreport.config.json'))]
   })
 
+  afterEach(() => {
+    if (currentInstance && currentInstance.express && currentInstance.express.server) {
+      currentInstance.express.server.close()
+    }
+
+    // reset jsreport.config.json to original value
+    fs.writeFileSync(
+      path.join(pathToTempProject, 'jsreport.config.json'),
+      JSON.stringify(originalDevConfig, null, 2)
+    )
+  })
+
+  after(function () {
+    // disabling timeout because removing files could take a
+    // couple of seconds
+    this.timeout(0)
+
+    utils.cleanTempDir(['render-project'])
+  })
+
   describe('when using local instance', () => {
     common('local')
 
@@ -119,15 +134,17 @@ describe('render command', () => {
         fs.writeFileSync(
           path.join(pathToTempProject, 'jsreport.config.json'),
           JSON.stringify({
-            authentication: {
-              cookieSession: {
-                secret: '<your strong secret>'
-              },
-              admin: {
-                username: 'admin',
-                password: 'password'
-              },
-              enabled: true
+            extensions: {
+              authentication: {
+                cookieSession: {
+                  secret: '<your strong secret>'
+                },
+                admin: {
+                  username: 'admin',
+                  password: 'password'
+                },
+                enabled: true
+              }
             }
           }, null, 2)
         )
@@ -168,6 +185,16 @@ describe('render command', () => {
       })
     })
 
+    after(function () {
+      if (child) {
+        child.kill()
+      }
+
+      if (childWithAuth) {
+        childWithAuth.kill()
+      }
+    })
+
     common('remote', {
       hostname: 'localhost',
       port: 7869
@@ -181,15 +208,17 @@ describe('render command', () => {
         fs.writeFileSync(
           path.join(pathToTempProject, 'jsreport.config.json'),
           JSON.stringify({
-            authentication: {
-              cookieSession: {
-                secret: '<your strong secret>'
-              },
-              admin: {
-                username: 'admin',
-                password: 'password'
-              },
-              enabled: true
+            extensions: {
+              authentication: {
+                cookieSession: {
+                  secret: '<your strong secret>'
+                },
+                admin: {
+                  username: 'admin',
+                  password: 'password'
+                },
+                enabled: true
+              }
             }
           }, null, 2)
         )
@@ -227,16 +256,6 @@ describe('render command', () => {
         }
       })
     })
-
-    after(function () {
-      if (child) {
-        child.kill()
-      }
-
-      if (childWithAuth) {
-        childWithAuth.kill()
-      }
-    })
   })
 
   describe('when using local instance with keepAlive option', () => {
@@ -250,6 +269,13 @@ describe('render command', () => {
           httpPort: 7468
         }, null, 2)
       )
+    })
+
+    after(() => {
+      if (daemonProcess) {
+        process.kill(daemonProcess.pid)
+        process.kill(daemonProcess.proc.pid)
+      }
     })
 
     it('should render normally and next calls to render should use the same daemon process', async function () {
@@ -299,33 +325,6 @@ describe('render command', () => {
       should(info2.fromDaemon).be.eql(true)
       should(fs.existsSync(info2.output)).be.eql(true)
     })
-
-    after(() => {
-      if (daemonProcess) {
-        process.kill(daemonProcess.pid)
-        process.kill(daemonProcess.proc.pid)
-      }
-    })
-  })
-
-  afterEach(() => {
-    if (currentInstance && currentInstance.express && currentInstance.express.server) {
-      currentInstance.express.server.close()
-    }
-
-    // reset jsreport.config.json to original value
-    fs.writeFileSync(
-      path.join(pathToTempProject, 'jsreport.config.json'),
-      JSON.stringify(originalDevConfig, null, 2)
-    )
-  })
-
-  after(function () {
-    // disabling timeout because removing files could take a
-    // couple of seconds
-    this.timeout(0)
-
-    utils.cleanTempDir(['render-project'])
   })
 
   function common (instanceType, remote) {
@@ -474,8 +473,11 @@ describe('render command', () => {
       should(fs.existsSync(info.output)).be.eql(true)
       should(fs.existsSync(info.meta)).be.eql(true)
 
-      const meta = JSON.parse(fs.readFileSync(info.meta).toString())
-      meta.should.have.property('contentDisposition')
+      // only test in remote instance since in local instance express extension is disabled
+      if (instanceType === 'remote') {
+        const meta = JSON.parse(fs.readFileSync(info.meta).toString())
+        meta.should.have.property('contentDisposition')
+      }
     })
   }
 })

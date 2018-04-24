@@ -1,15 +1,10 @@
 const path = require('path')
 const fs = require('fs')
 const should = require('should')
+const jsreportVersionToTest = require('../jsreportVersionToTest')
 const utils = require('../utils')
 const keepAliveProcess = require('../../lib/keepAliveProcess')
 const kill = require('../../lib/commands/kill').handler
-
-function tryCreate (dir) {
-  try {
-    fs.mkdirSync(dir, '0755')
-  } catch (ex) { }
-}
 
 describe('kill command', () => {
   let pathToTempProject
@@ -32,7 +27,7 @@ describe('kill command', () => {
         JSON.stringify({
           name: 'kill-project',
           dependencies: {
-            jsreport: '*'
+            jsreport: jsreportVersionToTest
           },
           jsreport: {
             entryPoint: 'server.js'
@@ -66,8 +61,8 @@ describe('kill command', () => {
       pathToSocketDir = path.join(absoluteDir, 'sock-dir')
       pathToWorkerSocketDir = path.join(absoluteDir, 'workerSock-dir')
 
-      tryCreate(pathToSocketDir)
-      tryCreate(pathToWorkerSocketDir)
+      utils.tryCreate(pathToSocketDir)
+      utils.tryCreate(pathToWorkerSocketDir)
 
       utils.npmInstall(pathToTempProject, done)
     })
