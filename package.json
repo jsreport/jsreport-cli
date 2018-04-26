@@ -50,6 +50,8 @@
     }
   },
   "dependencies": {
+    "chalk": "2.3.2",
+    "cliui": "4.0.0",
     "inquirer": "5.1.0",
     "ip-address": "5.8.9",
     "is-absolute-url": "2.1.0",
@@ -61,7 +63,6 @@
     "npm-install-package": "2.1.0",
     "nssocket": "0.6.0",
     "once": "1.4.0",
-    "path-is-absolute": "1.0.1",
     "prompt-tmp": "1.0.0",
     "semver": "5.5.0",
     "silent-spawn": "0.4.0",

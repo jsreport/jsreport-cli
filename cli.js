@@ -18,6 +18,7 @@ const path = require('path')
 const Liftoff = require('liftoff')
 const commander = require('./lib/commander')
 const { printErrorAndExit } = require('./lib/errorUtils')
+const help = require('./lib/commands/help')
 const init = require('./lib/commands/init')
 const repair = require('./lib/commands/repair')
 const configure = require('./lib/commands/configure')
@@ -40,8 +41,8 @@ function initCLI (env) {
     // if no local installation is found,
     // try to detect if some global command was specified
     const globalCliHandler = commander(cwd, {
-      builtInCommands: [init, repair, configure, render],
-      ignoreEntryPointCommands: ['init', 'repair', 'configure', 'render']
+      builtInCommands: [help, init, repair, configure, render],
+      ignoreEntryPointCommands: ['help', 'init', 'repair', 'configure', 'render']
     })
 
     globalCliHandler.on('started', (err, info) => {
