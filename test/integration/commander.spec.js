@@ -38,7 +38,7 @@ describe('commander', () => {
           path.join(absoluteDir, './server.js'),
           [
             'const jsreport = require("jsreport")()',
-            'if (require.main !== module) {',
+            'if (process.env.JSREPORT_CLI) {',
             'module.exports = jsreport',
             '} else {',
             'jsreport.init().catch(function (e) {',
