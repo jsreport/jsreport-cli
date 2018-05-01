@@ -15,6 +15,13 @@ describe('cli', () => {
     exec('--help').should.match(/Usage: jsreport/)
   })
 
+  it('"help config" should return message', () => {
+    const result = exec('help config')
+
+    result.should.match(/Configuration format description/)
+    result.should.match(/"extensions": <object> {/)
+  })
+
   it('render should write to output file', () => {
     fs.writeFileSync(path.join(cwd, 'test.html'), 'foo')
     exec('render --template.content=test.html --template.engine=none --template.recipe=html --out=out.html')
