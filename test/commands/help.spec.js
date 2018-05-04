@@ -138,7 +138,7 @@ describe('help command', () => {
     })
 
     result.raw.should.match(/"extensions": <object> {/)
-    result.raw.should.match(/"renderingSource": <string> \(allowed values: "trusted", "untrusted"\)/)
+    result.raw.should.match(/"allowLocalFilesAccess": <boolean>/)
     result.raw.should.match(/"tempDirectory": <string>/)
 
     await currentInstance.express.server.close()

@@ -33,7 +33,7 @@ describe('configure command', () => {
         env: 'dev',
         serverEnabled: false,
         store: 'memory',
-        renderingSource: false,
+        allowLocalFilesAccess: false,
         createExamples: false
       })
     )
@@ -47,7 +47,7 @@ describe('configure command', () => {
     should(result.filePath).be.undefined()
 
     should(result.config).be.eql({
-      renderingSource: 'untrusted',
+      allowLocalFilesAccess: false,
       store: {
         provider: 'memory'
       },
@@ -80,7 +80,7 @@ describe('configure command', () => {
         env: 'dev',
         serverEnabled: false,
         store: 'memory',
-        renderingSource: false,
+        allowLocalFilesAccess: false,
         createExamples: false
       })
     )
@@ -91,7 +91,7 @@ describe('configure command', () => {
       }
     })
     const expectedConfig = {
-      renderingSource: 'untrusted',
+      allowLocalFilesAccess: false,
       store: {
         provider: 'memory'
       },
@@ -134,7 +134,7 @@ describe('configure command', () => {
         serverAuthUsername: 'test',
         serverAuthPassword: 'test-pass',
         store: 'fs',
-        renderingSource: true,
+        allowLocalFilesAccess: true,
         createExamples: true,
         fastStrategies: true
       })
@@ -148,7 +148,7 @@ describe('configure command', () => {
 
     const expectedConfig = {
       httpPort: 7500,
-      renderingSource: 'trusted',
+      allowLocalFilesAccess: true,
       extensions: {
         authentication: {
           cookieSession: { secret: 'secret here' },
@@ -194,7 +194,7 @@ describe('configure command', () => {
         env: 'prod',
         serverEnabled: false,
         store: 'memory',
-        renderingSource: false,
+        allowLocalFilesAccess: false,
         fastStrategies: false,
         createExamples: false
       })
@@ -207,7 +207,7 @@ describe('configure command', () => {
     })
 
     const expectedConfig = {
-      renderingSource: 'untrusted',
+      allowLocalFilesAccess: false,
       store: {
         provider: 'memory'
       },

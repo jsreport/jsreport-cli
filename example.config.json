@@ -1,15 +1,15 @@
-{   
-    "httpPort": 5488,  
-    "renderingSource": "trusted",
+{
+    "httpPort": 5488,
+    "allowLocalFilesAccess": true,
     "store": {
         "provider": "fs"
     },
     "blobStorage": {
         "provider": "fs"
     },
-    "templatingEngines": {        
-        "timeout": 10000        
-    },  
+    "templatingEngines": {
+        "timeout": 10000
+    },
     "chrome": {
         "timeout": 30000
     },
@@ -25,7 +25,7 @@
             "enabled": false
         },
         "sample-template": {
-            "createSamples": true   
+            "createSamples": true
         },
         "scripts": {
             "timeout": 30000
