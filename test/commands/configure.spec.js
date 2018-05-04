@@ -1,142 +1,129 @@
-'use strict'
+const path = require('path')
+const fs = require('fs')
+const inquirer = require('inquirer')
+const should = require('should')
+const sinon = require('sinon')
+const utils = require('../utils')
+const configure = require('../../lib/commands/configure').handler
 
-var path = require('path')
-var fs = require('fs')
-var Promise = require('bluebird')
-var inquirer = require('inquirer')
-var should = require('should')
-var sinon = require('sinon')
-var utils = require('../utils')
-var configure = require('../../lib/commands/configure').handler
+describe('configure command', () => {
+  let pathToTempProject
+  let sandbox
 
-describe('configure command', function () {
-  var pathToTempProject
-
-  before(function () {
+  before(() => {
     utils.cleanTempDir(['configure-project'])
-
-    utils.createTempDir(['configure-project'], function (dir, absoluteDir) {
-      pathToTempProject = absoluteDir
-    })
+    utils.createTempDir(['configure-project'], (dir, absoluteDir) => (pathToTempProject = absoluteDir))
   })
 
-  beforeEach(function () {
-    this.sandbox = sinon.sandbox.create()
+  beforeEach(() => (sandbox = sinon.sandbox.create()))
+
+  afterEach(() => {
+    if (fs.existsSync(path.join(pathToTempProject, 'jsreport.config.json'))) {
+      fs.unlinkSync(path.join(pathToTempProject, 'jsreport.config.json'))
+    }
+
+    sandbox.restore()
   })
 
-  it('should just print configuration', function () {
-    this.sandbox.stub(inquirer, 'prompt').returns(
+  after(() => utils.cleanTempDir(['configure-project']))
+
+  it('should just print configuration', async () => {
+    sandbox.stub(inquirer, 'prompt').returns(
       Promise.resolve({
         env: 'dev',
         serverEnabled: false,
-        connectionString: 'memory',
-        accessLocalFiles: false,
-        fastStrategies: false,
+        store: 'memory',
+        allowLocalFilesAccess: false,
         createExamples: false
       })
     )
 
-    return configure({
+    const result = await configure({
       print: true,
       context: {
         cwd: pathToTempProject
       }
-    }).then(function (result) {
-      should(result.filePath).be.undefined()
+    })
+    should(result.filePath).be.undefined()
 
-      should(result.config).be.eql({
-        connectionString: {
-          name: 'memory'
-        },
-        blobStorage: 'inMemory',
-        logger: {
-          console: { transport: 'console', level: 'debug' }
-        },
+    should(result.config).be.eql({
+      allowLocalFilesAccess: false,
+      store: {
+        provider: 'memory'
+      },
+      blobStorage: {
+        provider: 'memory'
+      },
+      logger: {
+        console: { transport: 'console', level: 'debug' }
+      },
+      extensions: {
         express: {
           enabled: false
         },
-        phantom: {
-          allowLocalFilesAccess: false,
-          strategy: 'dedicated-process',
-          timeout: 40000
-        },
-        electron: {
-          allowLocalFilesAccess: false,
-          strategy: 'dedicated-process',
-          timeout: 40000
-        },
-        tasks: {
-          strategy: 'dedicated-process',
-          timeout: 10000
-        },
         scripts: {
           timeout: 40000
-        },
-        'sample-template': {
-          createSamples: false
         }
-      })
+      },
+      templatingEngines: {
+        timeout: 10000
+      },
+      chrome: {
+        timeout: 40000
+      }
     })
   })
 
-  it('should generate simple configuration', function () {
-    this.sandbox.stub(inquirer, 'prompt').returns(
+  it('should generate simple configuration', async () => {
+    sandbox.stub(inquirer, 'prompt').returns(
       Promise.resolve({
         env: 'dev',
         serverEnabled: false,
-        connectionString: 'memory',
-        accessLocalFiles: false,
-        fastStrategies: false,
+        store: 'memory',
+        allowLocalFilesAccess: false,
         createExamples: false
       })
     )
 
-    return configure({
+    const result = await configure({
       context: {
         cwd: pathToTempProject
       }
-    }).then(function (result) {
-      var expectedConfig = {
-        connectionString: {
-          name: 'memory'
-        },
-        blobStorage: 'inMemory',
-        logger: {
-          console: { transport: 'console', level: 'debug' }
-        },
+    })
+    const expectedConfig = {
+      allowLocalFilesAccess: false,
+      store: {
+        provider: 'memory'
+      },
+      blobStorage: {
+        provider: 'memory'
+      },
+      logger: {
+        console: { transport: 'console', level: 'debug' }
+      },
+      extensions: {
         express: {
           enabled: false
         },
-        phantom: {
-          allowLocalFilesAccess: false,
-          strategy: 'dedicated-process',
-          timeout: 40000
-        },
-        electron: {
-          allowLocalFilesAccess: false,
-          strategy: 'dedicated-process',
-          timeout: 40000
-        },
-        tasks: {
-          strategy: 'dedicated-process',
-          timeout: 10000
-        },
         scripts: {
           timeout: 40000
-        },
-        'sample-template': {
-          createSamples: false
         }
+      },
+      templatingEngines: {
+        timeout: 10000
+      },
+      chrome: {
+        timeout: 40000
       }
+    }
 
-      should(fs.existsSync(result.filePath)).be.True()
-      should(JSON.parse(fs.readFileSync(result.filePath).toString())).be.eql(expectedConfig)
-      should(result.config).be.eql(expectedConfig)
-    })
+    should(fs.existsSync(result.filePath)).be.True()
+    should(JSON.parse(fs.readFileSync(result.filePath).toString())).be.eql(expectedConfig)
+    should(result.config).be.eql(expectedConfig)
   })
 
-  it('should generate configuration with web server enabled', function () {
-    this.sandbox.stub(inquirer, 'prompt').returns(
+  it('should generate configuration with web server enabled', async () => {
+    sandbox.stub(inquirer, 'prompt').returns(
       Promise.resolve({
         env: 'dev',
         serverEnabled: true,
@@ -146,134 +133,109 @@ describe('configure command', function () {
         serverAuthCookieSecret: 'secret here',
         serverAuthUsername: 'test',
         serverAuthPassword: 'test-pass',
-        connectionString: 'fs',
-        accessLocalFiles: true,
-        fastStrategies: true,
-        createExamples: true
+        store: 'fs',
+        allowLocalFilesAccess: true,
+        createExamples: true,
+        fastStrategies: true
       })
     )
 
-    return configure({
+    const result = await configure({
       context: {
         cwd: pathToTempProject
       }
-    }).then(function (result) {
-      var expectedConfig = {
-        httpPort: 7500,
+    })
+
+    const expectedConfig = {
+      httpPort: 7500,
+      allowLocalFilesAccess: true,
+      extensions: {
         authentication: {
           cookieSession: { secret: 'secret here' },
           admin: { username: 'test', password: 'test-pass' },
           enabled: true
         },
-        connectionString: {
-          name: 'fs'
-        },
-        blobStorage: 'fileSystem',
-        logger: {
-          console: { transport: 'console', level: 'debug' },
-          file: { transport: 'file', level: 'info', filename: 'logs/reporter.log' },
-          error: { transport: 'file', level: 'error', filename: 'logs/error.log' }
-        },
-        phantom: {
-          allowLocalFilesAccess: true,
-          strategy: 'phantom-server',
-          timeout: 40000
-        },
-        electron: {
-          allowLocalFilesAccess: true,
-          strategy: 'electron-ipc',
-          timeout: 40000
-        },
-        tasks: {
-          strategy: 'http-server',
-          timeout: 10000,
-          allowedModules: '*'
-        },
         scripts: {
           timeout: 40000,
-          allowedModules: '*'
-        },
-        assets: {
-          allowedFiles: '*.*',
-          searchOnDiskIfNotFoundInStore: true
+          strategy: 'http-server'
         },
         'sample-template': {
           createSamples: true
         }
+      },
+      store: {
+        provider: 'fs'
+      },
+      blobStorage: {
+        provider: 'fs'
+      },
+      chrome: {
+        timeout: 40000
+      },
+      logger: {
+        console: { transport: 'console', level: 'debug' },
+        file: { transport: 'file', level: 'info', filename: 'logs/reporter.log' },
+        error: { transport: 'file', level: 'error', filename: 'logs/error.log' }
+      },
+      templatingEngines: {
+        timeout: 10000,
+        strategy: 'http-server'
       }
+    }
 
-      should(fs.existsSync(result.filePath)).be.True()
-      should(JSON.parse(fs.readFileSync(result.filePath).toString())).be.eql(expectedConfig)
-      should(result.config).be.eql(expectedConfig)
-    })
+    should(fs.existsSync(result.filePath)).be.True()
+    should(JSON.parse(fs.readFileSync(result.filePath).toString())).be.eql(expectedConfig)
+    should(result.config).be.eql(expectedConfig)
   })
 
-  it('should generate configuration file', function () {
-    this.sandbox.stub(inquirer, 'prompt').returns(
+  it('should generate configuration file', async () => {
+    sandbox.stub(inquirer, 'prompt').returns(
       Promise.resolve({
         env: 'prod',
         serverEnabled: false,
-        connectionString: 'memory',
-        accessLocalFiles: false,
+        store: 'memory',
+        allowLocalFilesAccess: false,
         fastStrategies: false,
         createExamples: false
       })
     )
 
-    return configure({
+    const result = await configure({
       context: {
         cwd: pathToTempProject
       }
-    }).then(function (result) {
-      var expectedConfig = {
-        connectionString: {
-          name: 'memory'
-        },
-        blobStorage: 'inMemory',
-        logger: {
-          console: { transport: 'console', level: 'debug' }
-        },
+    })
+
+    const expectedConfig = {
+      allowLocalFilesAccess: false,
+      store: {
+        provider: 'memory'
+      },
+      blobStorage: {
+        provider: 'memory'
+      },
+      logger: {
+        console: { transport: 'console', level: 'debug' }
+      },
+      templatingEngines: {
+        timeout: 10000
+      },
+      chrome: {
+        timeout: 40000
+      },
+      extensions: {
         express: {
           enabled: false
         },
-        phantom: {
-          allowLocalFilesAccess: false,
-          strategy: 'dedicated-process',
-          timeout: 40000
-        },
-        electron: {
-          allowLocalFilesAccess: false,
-          strategy: 'dedicated-process',
-          timeout: 40000
-        },
-        tasks: {
-          strategy: 'dedicated-process',
-          timeout: 10000
-        },
         scripts: {
           timeout: 40000
-        },
-        'sample-template': {
-          createSamples: false
         }
       }
-
-      should(fs.existsSync(result.filePath)).be.True()
-      should(path.basename(result.filePath)).be.eql('jsreport.config.json')
-      should(JSON.parse(fs.readFileSync(result.filePath).toString())).be.eql(expectedConfig)
-      should(result.config).be.eql(expectedConfig)
-    })
-  })
-
-  afterEach(function () {
-    if (fs.existsSync(path.join(pathToTempProject, 'jsreport.config.json'))) {
-      fs.unlinkSync(path.join(pathToTempProject, 'jsreport.config.json'))
     }
 
-    this.sandbox.restore()
-  })
-
-  after(function () {
-    utils.cleanTempDir(['configure-project'])
+    should(fs.existsSync(result.filePath)).be.True()
+    should(path.basename(result.filePath)).be.eql('jsreport.config.json')
+    should(JSON.parse(fs.readFileSync(result.filePath).toString())).be.eql(expectedConfig)
+    should(result.config).be.eql(expectedConfig)
   })
 })

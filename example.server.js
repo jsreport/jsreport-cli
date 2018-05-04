@@ -1,12 +1,12 @@
-var jsreport = require('$moduleName$')()
+const jsreport = require('$moduleName$')()
 
 if (process.env.JSREPORT_CLI) {
   // export jsreport instance to make it possible to use jsreport-cli
   module.exports = jsreport
 } else {
-  jsreport.init().then(function () {
+  jsreport.init().then(() => {
     // running
-  }).catch(function (e) {
+  }).catch((e) => {
     // error during startup
     console.error(e.stack)
     process.exit(1)

@@ -1,10 +1,11 @@
-var assign = require('object-assign')
-var commander = require('./lib/commander')
-var main = require('./lib/cliExtension')
-var config = require('./jsreport.config')
+'use strict'
+
+const commander = require('./lib/commander')
+const main = require('./lib/cliExtension')
+const config = require('./jsreport.config')
 
 module.exports = function (options) {
-  var newConfig = assign({}, config)
+  const newConfig = Object.assign({}, config)
 
   newConfig.options = options
   newConfig.main = main

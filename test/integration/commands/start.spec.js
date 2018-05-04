@@ -1,33 +1,25 @@
-'use strict'
+const path = require('path')
+const fs = require('fs')
+const should = require('should')
+const jsreportVersionToTest = require('../../jsreportVersionToTest')
+const utils = require('../../utils')
+const instanceHandler = require('../../../lib/instanceHandler')
+const start = require('../../../lib/commands/start').handler
 
-var path = require('path')
-var fs = require('fs')
-var should = require('should')
-var utils = require('../../utils')
-var instanceHandler = require('../../../lib/instanceHandler')
-var start = require('../../../lib/commands/start').handler
+describe('start command', () => {
+  let pathToTempProject
+  let currentInstance
+  const port = 9879
 
-describe('start command', function () {
-  var pathToTempProject
-  var currentInstance
-  var port = 9879
-
-  function getInstance (cwd) {
-    return (
-      instanceHandler
-      .find(cwd)
-      .then(function (instanceInfo) {
-        return instanceInfo.instance
-      })
-    )
+  async function getInstance (cwd) {
+    const instanceInfo = await instanceHandler.find(cwd)
+    return instanceInfo.instance
   }
 
   function initInstance (instance) {
     currentInstance = instance
 
-    return (
-      instanceHandler.initialize(instance, false)
-    )
+    return instanceHandler.initialize(instance, false)
   }
 
   before(function (done) {
@@ -37,7 +29,7 @@ describe('start command', function () {
 
     utils.cleanTempDir(['start-project'])
 
-    utils.createTempDir(['start-project'], function (dir, absoluteDir) {
+    utils.createTempDir(['start-project'], (dir, absoluteDir) => {
       pathToTempProject = absoluteDir
 
       fs.writeFileSync(
@@ -45,7 +37,7 @@ describe('start command', function () {
         JSON.stringify({
           name: 'start-project',
           dependencies: {
-            jsreport: '*'
+            jsreport: jsreportVersionToTest
           },
           jsreport: {
             entryPoint: 'server.js'
@@ -63,8 +55,8 @@ describe('start command', function () {
       fs.writeFileSync(
         path.join(absoluteDir, './server.js'),
         [
-          'var jsreport = require("jsreport")()',
-          'if (require.main !== module) {',
+          'const jsreport = require("jsreport")()',
+          'if (process.env.JSREPORT_CLI) {',
           'module.exports = jsreport',
           '} else {',
           'jsreport.init().catch(function (e) {',
@@ -80,25 +72,18 @@ describe('start command', function () {
     })
   })
 
-  it('should handle errors', function () {
-    return (
-      start({
-        context: {
-          cwd: '/invalid/path',
-          getInstance: getInstance,
-          initInstance: initInstance
-        }
-      })
-      .then(function () {
-        throw new Error('start should have failed')
-      }, function (err) {
-        should(err).be.Error()
-      })
-    )
+  it('should handle errors', async () => {
+    return start({
+      context: {
+        cwd: '/invalid/path',
+        getInstance: getInstance,
+        initInstance: initInstance
+      }
+    }).should.be.rejected()
   })
 
-  it('should start a jsreport instance', function () {
-    return (
+  it('should start a jsreport instance', async () => {
+    const instance = await
       start({
         context: {
           cwd: pathToTempProject,
@@ -106,14 +91,12 @@ describe('start command', function () {
           initInstance: initInstance
         }
       })
-      .then(function (instance) {
-        should(instanceHandler.isJsreportInstance(instance)).be.eql(true)
-        should(instance._initialized).be.eql(true)
-      })
-    )
+
+    should(instanceHandler.isJsreportInstance(instance)).be.eql(true)
+    should(instance._initialized).be.eql(true)
   })
 
-  afterEach(function () {
+  afterEach(() => {
     if (currentInstance && currentInstance.express && currentInstance.express.server) {
       currentInstance.express.server.close()
     }

@@ -1,19 +1,23 @@
-'use strict'
+const path = require('path')
+const mkdirp = require('mkdirp')
+const rimraf = require('rimraf')
+const fs = require('fs')
+const childProcess = require('child_process')
+const mockProcessExit = require('./mockProcessExit')
 
-var path = require('path')
-var mkdirp = require('mkdirp')
-var rimraf = require('rimraf')
-var fs = require('fs')
-var childProcess = require('child_process')
-var mockProcessExit = require('./mockProcessExit')
+function tryCreate (dir) {
+  try {
+    fs.mkdirSync(dir, '0755')
+  } catch (ex) { }
+}
 
 function getTempDir (dir) {
   return path.join(__dirname, '../temp', dir)
 }
 
 function createTempDir (dirs, visitor) {
-  dirs.forEach(function (dir) {
-    var absoluteDir = getTempDir(dir)
+  dirs.forEach((dir) => {
+    const absoluteDir = getTempDir(dir)
 
     mkdirp.sync(absoluteDir)
 
@@ -23,9 +27,9 @@ function createTempDir (dirs, visitor) {
 
 function cleanTempDir (dirs) {
   try {
-    dirs.forEach(function (dir) {
-      var fullDir = getTempDir(dir)
-      fs.readdirSync(fullDir).forEach(function (d) {
+    dirs.forEach((dir) => {
+      const fullDir = getTempDir(dir)
+      fs.readdirSync(fullDir).forEach((d) => {
         // omit node_modules from cleaning to speed up the tests
         if (d !== 'node_modules') {
           rimraf.sync(path.join(fullDir, d))
@@ -46,7 +50,7 @@ function npmInstall (cwd, cb) {
 
   childProcess.exec('npm install', {
     cwd: cwd
-  }, function (error, stdout, stderr) {
+  }, (error, stdout, stderr) => {
     if (error) {
       console.log('error while installing dependencies for test suite...')
       return cb(error)
@@ -57,6 +61,7 @@ function npmInstall (cwd, cb) {
   })
 }
 
+exports.tryCreate = tryCreate
 exports.getTempDir = getTempDir
 exports.cleanTempDir = cleanTempDir
 exports.createTempDir = createTempDir

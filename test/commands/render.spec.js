@@ -1,27 +1,20 @@
-'use strict'
+const path = require('path')
+const fs = require('fs')
+const childProcess = require('child_process')
+const should = require('should')
+const nanoid = require('nanoid')
+const jsreportVersionToTest = require('../jsreportVersionToTest')
+const utils = require('../utils')
+const instanceHandler = require('../../lib/instanceHandler')
+const render = require('../../lib/commands/render').handler
 
-var path = require('path')
-var fs = require('fs')
-var childProcess = require('child_process')
-var should = require('should')
-var nanoid = require('nanoid')
-var utils = require('../utils')
-var instanceHandler = require('../../lib/instanceHandler')
-var render = require('../../lib/commands/render').handler
+describe('render command', () => {
+  let pathToTempProject
+  let pathToSocketDir
+  let pathToWorkerSocketDir
+  let currentInstance
 
-function tryCreate (dir) {
-  try {
-    fs.mkdirSync(dir, '0755')
-  } catch (ex) { }
-}
-
-describe('render command', function () {
-  var pathToTempProject
-  var pathToSocketDir
-  var pathToWorkerSocketDir
-  var currentInstance
-
-  var originalDevConfig = {
+  const originalDevConfig = {
     authentication: {
       cookieSession: {
         secret: '<your strong secret>'
@@ -37,10 +30,10 @@ describe('render command', function () {
   function getInstance () {
     return (
       instanceHandler
-      .find(pathToTempProject)
-      .then(function (instanceInfo) {
-        return instanceInfo.instance
-      })
+        .find(pathToTempProject)
+        .then(function (instanceInfo) {
+          return instanceInfo.instance
+        })
     )
   }
 
@@ -59,7 +52,7 @@ describe('render command', function () {
 
     utils.cleanTempDir(['render-project'])
 
-    utils.createTempDir(['render-project'], function (dir, absoluteDir) {
+    utils.createTempDir(['render-project'], (dir, absoluteDir) => {
       pathToTempProject = absoluteDir
 
       fs.writeFileSync(
@@ -67,7 +60,7 @@ describe('render command', function () {
         JSON.stringify({
           name: 'render-project',
           dependencies: {
-            jsreport: '*'
+            jsreport: jsreportVersionToTest
           },
           jsreport: {
             entryPoint: 'server.js'
@@ -83,8 +76,8 @@ describe('render command', function () {
       fs.writeFileSync(
         path.join(absoluteDir, './server.js'),
         [
-          'var jsreport = require("jsreport")()',
-          'if (require.main !== module) {',
+          'const jsreport = require("jsreport")()',
+          'if (process.env.JSREPORT_CLI) {',
           'module.exports = jsreport',
           '} else {',
           'jsreport.init().catch(function (e) {',
@@ -99,37 +92,59 @@ describe('render command', function () {
       pathToSocketDir = path.join(absoluteDir, 'sock-dir')
       pathToWorkerSocketDir = path.join(absoluteDir, 'workerSock-dir')
 
-      tryCreate(pathToSocketDir)
-      tryCreate(pathToWorkerSocketDir)
+      utils.tryCreate(pathToSocketDir)
+      utils.tryCreate(pathToWorkerSocketDir)
     })
 
     utils.npmInstall(pathToTempProject, done)
   })
 
-  beforeEach(function () {
+  beforeEach(() => {
     // deleting cache of package.json to allow run the tests on the same project
     delete require.cache[require.resolve(path.join(pathToTempProject, './package.json'))]
     delete require.cache[require.resolve(path.join(pathToTempProject, './jsreport.config.json'))]
   })
 
-  describe('when using local instance', function () {
+  afterEach(() => {
+    if (currentInstance && currentInstance.express && currentInstance.express.server) {
+      currentInstance.express.server.close()
+    }
+
+    // reset jsreport.config.json to original value
+    fs.writeFileSync(
+      path.join(pathToTempProject, 'jsreport.config.json'),
+      JSON.stringify(originalDevConfig, null, 2)
+    )
+  })
+
+  after(function () {
+    // disabling timeout because removing files could take a
+    // couple of seconds
+    this.timeout(0)
+
+    utils.cleanTempDir(['render-project'])
+  })
+
+  describe('when using local instance', () => {
     common('local')
 
-    describe('and when authentication is enabled', function () {
-      beforeEach(function () {
+    describe('and when authentication is enabled', () => {
+      beforeEach(() => {
         // enabling authentication
         fs.writeFileSync(
           path.join(pathToTempProject, 'jsreport.config.json'),
           JSON.stringify({
-            authentication: {
-              cookieSession: {
-                secret: '<your strong secret>'
-              },
-              admin: {
-                username: 'admin',
-                password: 'password'
-              },
-              enabled: true
+            extensions: {
+              authentication: {
+                cookieSession: {
+                  secret: '<your strong secret>'
+                },
+                admin: {
+                  username: 'admin',
+                  password: 'password'
+                },
+                enabled: true
+              }
             }
           }, null, 2)
         )
@@ -139,9 +154,9 @@ describe('render command', function () {
     })
   })
 
-  describe('when using remote instance', function () {
-    var child
-    var childWithAuth
+  describe('when using remote instance', () => {
+    let child
+    let childWithAuth
 
     before(function (done) {
       this.timeout(0)
@@ -170,12 +185,22 @@ describe('render command', function () {
       })
     })
 
+    after(function () {
+      if (child) {
+        child.kill()
+      }
+
+      if (childWithAuth) {
+        childWithAuth.kill()
+      }
+    })
+
     common('remote', {
       hostname: 'localhost',
       port: 7869
     })
 
-    describe('and when authentication is enabled', function () {
+    describe('and when authentication is enabled', () => {
       before(function (done) {
         this.timeout(0)
 
@@ -183,15 +208,17 @@ describe('render command', function () {
         fs.writeFileSync(
           path.join(pathToTempProject, 'jsreport.config.json'),
           JSON.stringify({
-            authentication: {
-              cookieSession: {
-                secret: '<your strong secret>'
-              },
-              admin: {
-                username: 'admin',
-                password: 'password'
-              },
-              enabled: true
+            extensions: {
+              authentication: {
+                cookieSession: {
+                  secret: '<your strong secret>'
+                },
+                admin: {
+                  username: 'admin',
+                  password: 'password'
+                },
+                enabled: true
+              }
             }
           }, null, 2)
         )
@@ -229,20 +256,10 @@ describe('render command', function () {
         }
       })
     })
-
-    after(function () {
-      if (child) {
-        child.kill()
-      }
-
-      if (childWithAuth) {
-        childWithAuth.kill()
-      }
-    })
   })
 
-  describe('when using local instance with keepAlive option', function () {
-    var daemonProcess
+  describe('when using local instance with keepAlive option', () => {
+    let daemonProcess
 
     before(function () {
       // starting in specific port
@@ -254,90 +271,67 @@ describe('render command', function () {
       )
     })
 
-    it('should render normally and next calls to render should use the same daemon process', function () {
-      this.timeout(0)
-
-      var randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
-
-      return (
-        render({
-          keepAlive: true,
-          template: {
-            content: '<h1>Rendering in daemon process (first time)</h1>',
-            engine: 'handlebars',
-            recipe: 'html'
-          },
-          out: randomFile,
-          context: {
-            cwd: pathToTempProject,
-            sockPath: pathToSocketDir,
-            workerSockPath: pathToWorkerSocketDir,
-            getInstance: getInstance,
-            initInstance: initInstance
-          }
-        })
-        .then(function (info) {
-          daemonProcess = info.daemonProcess
-          should(info.fromDaemon).be.eql(true)
-          should(fs.existsSync(info.output)).be.eql(true)
-
-          randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
-
-          return render({
-            template: {
-              content: '<h1>Rendering in daemon process (second time)</h1>',
-              engine: 'handlebars',
-              recipe: 'html'
-            },
-            out: randomFile,
-            context: {
-              cwd: pathToTempProject,
-              sockPath: pathToSocketDir,
-              workerSockPath: pathToWorkerSocketDir,
-              getInstance: getInstance,
-              initInstance: initInstance
-            }
-          }).then(function (info) {
-            should(info.fromDaemon).be.eql(true)
-            should(fs.existsSync(info.output)).be.eql(true)
-          })
-        })
-      )
-    })
-
-    after(function () {
+    after(() => {
       if (daemonProcess) {
         process.kill(daemonProcess.pid)
         process.kill(daemonProcess.proc.pid)
       }
     })
-  })
 
-  afterEach(function () {
-    if (currentInstance && currentInstance.express && currentInstance.express.server) {
-      currentInstance.express.server.close()
-    }
+    it('should render normally and next calls to render should use the same daemon process', async function () {
+      this.timeout(0)
 
-    // reset jsreport.config.json to original value
-    fs.writeFileSync(
-      path.join(pathToTempProject, 'jsreport.config.json'),
-      JSON.stringify(originalDevConfig, null, 2)
-    )
-  })
+      let randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
 
-  after(function () {
-    // disabling timeout because removing files could take a
-    // couple of seconds
-    this.timeout(0)
+      const info = await render({
+        keepAlive: true,
+        template: {
+          content: '<h1>Rendering in daemon process (first time)</h1>',
+          engine: 'handlebars',
+          recipe: 'html'
+        },
+        out: randomFile,
+        context: {
+          cwd: pathToTempProject,
+          sockPath: pathToSocketDir,
+          workerSockPath: pathToWorkerSocketDir,
+          getInstance: getInstance,
+          initInstance: initInstance
+        }
+      })
 
-    utils.cleanTempDir(['render-project'])
+      daemonProcess = info.daemonProcess
+      should(info.fromDaemon).be.eql(true)
+      should(fs.existsSync(info.output)).be.eql(true)
+
+      randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
+
+      const info2 = await render({
+        template: {
+          content: '<h1>Rendering in daemon process (second time)</h1>',
+          engine: 'handlebars',
+          recipe: 'html'
+        },
+        out: randomFile,
+        context: {
+          cwd: pathToTempProject,
+          sockPath: pathToSocketDir,
+          workerSockPath: pathToWorkerSocketDir,
+          getInstance: getInstance,
+          initInstance: initInstance
+        }
+      })
+
+      should(info2.fromDaemon).be.eql(true)
+      should(fs.existsSync(info2.output)).be.eql(true)
+    })
   })
 
   function common (instanceType, remote) {
-    var remoteInfo = remote || {}
-    var serverUrl
-    var user
-    var password
+    let remoteInfo = remote || {}
+    let serverUrl
+    let user
+    let password
 
     if (instanceType === 'remote') {
       serverUrl = 'http://' + remoteInfo.hostname + ':' + remoteInfo.port
@@ -348,158 +342,142 @@ describe('render command', function () {
       password = remoteInfo.auth.password
     }
 
-    it('should handle a failed render', function () {
-      var randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
+    it('should handle a failed render', () => {
+      const randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
 
-      return (
-        render({
-          template: {
-            nanoid: 'unknown'
-          },
-          out: randomFile,
-          context: {
-            cwd: pathToTempProject,
-            sockPath: pathToSocketDir,
-            workerSockPath: pathToWorkerSocketDir,
-            getInstance: getInstance,
-            initInstance: initInstance
-          },
-          serverUrl: serverUrl,
-          user: user,
-          password: password
-        })
-        .then(function () {
-          throw new Error('render should have failed')
-        }, function (err) {
-          should(err).be.Error()
-        })
-      )
+      return render({
+        template: {
+          nanoid: 'unknown'
+        },
+        out: randomFile,
+        context: {
+          cwd: pathToTempProject,
+          sockPath: pathToSocketDir,
+          workerSockPath: pathToWorkerSocketDir,
+          getInstance: getInstance,
+          initInstance: initInstance
+        },
+        serverUrl: serverUrl,
+        user: user,
+        password: password
+      }).should.be.rejected()
     })
 
-    it('should render normally with request option', function () {
-      var randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
+    it('should render normally with request option', async () => {
+      const randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
 
-      return (
-        render({
-          request: {
-            template: {
-              content: '<h1>Test ' + instanceType + ' instance, request option</h1>',
-              engine: 'none',
-              recipe: 'html'
-            }
-          },
-          out: randomFile,
-          context: {
-            cwd: pathToTempProject,
-            sockPath: pathToSocketDir,
-            workerSockPath: pathToWorkerSocketDir,
-            getInstance: getInstance,
-            initInstance: initInstance
-          },
-          serverUrl: serverUrl,
-          user: user,
-          password: password
-        })
-        .then(function (info) {
-          should(fs.existsSync(info.output)).be.eql(true)
-        })
-      )
-    })
-
-    it('should render normally with template option', function () {
-      var randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
-
-      return (
-        render({
+      const info = await render({
+        request: {
           template: {
-            content: '<h1>Test ' + instanceType + ' instance, template option</h1>',
+            content: '<h1>Test ' + instanceType + ' instance, request option</h1>',
             engine: 'none',
             recipe: 'html'
-          },
-          out: randomFile,
-          context: {
-            cwd: pathToTempProject,
-            sockPath: pathToSocketDir,
-            workerSockPath: pathToWorkerSocketDir,
-            getInstance: getInstance,
-            initInstance: initInstance
-          },
-          serverUrl: serverUrl,
-          user: user,
-          password: password
-        })
-        .then(function (info) {
-          should(fs.existsSync(info.output)).be.eql(true)
-        })
-      )
+          }
+        },
+        out: randomFile,
+        context: {
+          cwd: pathToTempProject,
+          sockPath: pathToSocketDir,
+          workerSockPath: pathToWorkerSocketDir,
+          getInstance: getInstance,
+          initInstance: initInstance
+        },
+        serverUrl: serverUrl,
+        user: user,
+        password: password
+      })
+
+      should(fs.existsSync(info.output)).be.eql(true)
     })
 
-    it('should render normally with template and data option', function () {
-      var randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
+    it('should render normally with template option', async () => {
+      const randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
 
-      return (
-        render({
+      const info = await render({
+        template: {
+          content: '<h1>Test ' + instanceType + ' instance, template option</h1>',
+          engine: 'none',
+          recipe: 'html'
+        },
+        out: randomFile,
+        context: {
+          cwd: pathToTempProject,
+          sockPath: pathToSocketDir,
+          workerSockPath: pathToWorkerSocketDir,
+          getInstance: getInstance,
+          initInstance: initInstance
+        },
+        serverUrl: serverUrl,
+        user: user,
+        password: password
+      })
+
+      should(fs.existsSync(info.output)).be.eql(true)
+    })
+
+    it('should render normally with template and data option', async () => {
+      const randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
+
+      const info = await render({
+        template: {
+          content: '<h1>Hello i\'m {{name}} and i\'m rendering from {{instanceType}} instance, template and data option</h1>',
+          engine: 'handlebars',
+          recipe: 'html'
+        },
+        data: {
+          name: 'jsreport',
+          instanceType: instanceType
+        },
+        out: randomFile,
+        context: {
+          cwd: pathToTempProject,
+          sockPath: pathToSocketDir,
+          workerSockPath: pathToWorkerSocketDir,
+          getInstance: getInstance,
+          initInstance: initInstance
+        },
+        serverUrl: serverUrl,
+        user: user,
+        password: password
+      })
+
+      should(fs.existsSync(info.output)).be.eql(true)
+    })
+
+    it('should store meta response to specified file', async () => {
+      const randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
+      const randomMetaFile = path.join(pathToTempProject, nanoid(7) + '.json')
+
+      const info = await render({
+        request: {
           template: {
-            content: '<h1>Hello i\'m {{name}} and i\'m rendering from {{instanceType}} instance, template and data option</h1>',
-            engine: 'handlebars',
+            content: '<h1>Test ' + instanceType + ' instance, request option</h1>',
+            engine: 'none',
             recipe: 'html'
-          },
-          data: {
-            name: 'jsreport',
-            instanceType: instanceType
-          },
-          out: randomFile,
-          context: {
-            cwd: pathToTempProject,
-            sockPath: pathToSocketDir,
-            workerSockPath: pathToWorkerSocketDir,
-            getInstance: getInstance,
-            initInstance: initInstance
-          },
-          serverUrl: serverUrl,
-          user: user,
-          password: password
-        })
-        .then(function (info) {
-          should(fs.existsSync(info.output)).be.eql(true)
-        })
-      )
-    })
+          }
+        },
+        out: randomFile,
+        meta: randomMetaFile,
+        context: {
+          cwd: pathToTempProject,
+          sockPath: pathToSocketDir,
+          workerSockPath: pathToWorkerSocketDir,
+          getInstance: getInstance,
+          initInstance: initInstance
+        },
+        serverUrl: serverUrl,
+        user: user,
+        password: password
+      })
 
-    it('should store meta response to specified file', function () {
-      var randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
-      var randomMetaFile = path.join(pathToTempProject, nanoid(7) + '.json')
+      should(fs.existsSync(info.output)).be.eql(true)
+      should(fs.existsSync(info.meta)).be.eql(true)
 
-      return (
-        render({
-          request: {
-            template: {
-              content: '<h1>Test ' + instanceType + ' instance, request option</h1>',
-              engine: 'none',
-              recipe: 'html'
-            }
-          },
-          out: randomFile,
-          meta: randomMetaFile,
-          context: {
-            cwd: pathToTempProject,
-            sockPath: pathToSocketDir,
-            workerSockPath: pathToWorkerSocketDir,
-            getInstance: getInstance,
-            initInstance: initInstance
-          },
-          serverUrl: serverUrl,
-          user: user,
-          password: password
-        })
-        .then(function (info) {
-          should(fs.existsSync(info.output)).be.eql(true)
-          should(fs.existsSync(info.meta)).be.eql(true)
-
-          var meta = JSON.parse(fs.readFileSync(info.meta).toString())
-          meta.should.have.property('contentDisposition')
-        })
-      )
+      // only test in remote instance since in local instance express extension is disabled
+      if (instanceType === 'remote') {
+        const meta = JSON.parse(fs.readFileSync(info.meta).toString())
+        meta.should.have.property('contentDisposition')
+      }
     })
   }
 })

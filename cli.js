@@ -1,15 +1,30 @@
 #!/usr/bin/env node
-var path = require('path')
+'use strict'
+
 var semver = require('semver')
-var Liftoff = require('liftoff')
-var commander = require('./lib/commander')
-var init = require('./lib/commands/init')
-var repair = require('./lib/commands/repair')
-var configure = require('./lib/commands/configure')
-var render = require('./lib/commands/render')
 var cliPackageJson = require('./package.json')
 
-var cli = new Liftoff({
+if (!semver.satisfies(process.versions.node, cliPackageJson.engines.node)) {
+  console.error(
+    'jsreport cli requires to have installed a nodejs version of at least ' +
+    cliPackageJson.engines.node +
+    ' but you have installed version ' + process.versions.node + '. please update your nodejs version and try again'
+  )
+
+  process.exit(1)
+}
+
+const path = require('path')
+const Liftoff = require('liftoff')
+const commander = require('./lib/commander')
+const { printErrorAndExit } = require('./lib/errorUtils')
+const help = require('./lib/commands/help')
+const init = require('./lib/commands/init')
+const repair = require('./lib/commands/repair')
+const configure = require('./lib/commands/configure')
+const render = require('./lib/commands/render')
+
+const cli = new Liftoff({
   processTitle: 'jsreport',
   moduleName: 'jsreport-cli',
   configName: '.jsreport'
@@ -18,22 +33,21 @@ var cli = new Liftoff({
 cli.launch({}, initCLI)
 
 function initCLI (env) {
-  var args = process.argv.slice(2)
-  var cwd = process.cwd()
-  var localCommander
+  const args = process.argv.slice(2)
+  const cwd = process.cwd()
+  let localCommander
 
   if (!env.modulePath) {
     // if no local installation is found,
     // try to detect if some global command was specified
-    var globalCliHandler = commander(cwd, {
-      builtInCommands: [init, repair, configure, render],
-      ignoreEntryPointCommands: ['init', 'repair', 'configure', 'render']
+    const globalCliHandler = commander(cwd, {
+      builtInCommands: [help, init, repair, configure, render],
+      ignoreEntryPointCommands: ['help', 'init', 'repair', 'configure', 'render']
     })
 
-    globalCliHandler.on('started', function (err, info) {
+    globalCliHandler.on('started', (err, info) => {
       if (err) {
-        console.error(err.message)
-        return process.exit(1)
+        return printErrorAndExit(err)
       }
 
       if (!info.handled) {
@@ -50,8 +64,6 @@ function initCLI (env) {
 
         return process.exit(1)
       }
-
-      return
     })
 
     globalCliHandler.start(args)

@@ -1,15 +1,14 @@
-'use strict'
+const path = require('path')
+const fs = require('fs')
+const childProcess = require('child_process')
+const should = require('should')
+const jsreportVersionToTest = require('../../jsreportVersionToTest')
+const utils = require('../../utils')
+const winInstall = require('../../../lib/commands/win-install').handler
 
-var path = require('path')
-var fs = require('fs')
-var childProcess = require('child_process')
-var should = require('should')
-var utils = require('../../utils')
-var winInstall = require('../../../lib/commands/win-install').handler
+const IS_WINDOWS = process.platform === 'win32'
 
-var IS_WINDOWS = process.platform === 'win32'
-
-var TEMP_DIRS = [
+const TEMP_DIRS = [
   'win-install-empty',
   'win-install-packagejson-only',
   'win-install-packagejson-without-entry',
@@ -21,10 +20,10 @@ describe('win-install command', function () {
   // couple of seconds
   this.timeout(0)
 
-  before(function () {
+  before(() => {
     utils.cleanTempDir(TEMP_DIRS)
 
-    utils.createTempDir(TEMP_DIRS, function (dir, absoluteDir) {
+    utils.createTempDir(TEMP_DIRS, (dir, absoluteDir) => {
       switch (dir) {
         case 'win-install-packagejson-only':
           fs.writeFileSync(
@@ -52,7 +51,7 @@ describe('win-install command', function () {
               name: 'jsreport-server-for-cli-testing',
               main: 'server.js',
               dependencies: {
-                jsreport: '*'
+                jsreport: jsreportVersionToTest
               }
             }, null, 2)
           )
@@ -61,14 +60,13 @@ describe('win-install command', function () {
             path.join(absoluteDir, './server.js'),
             'require("jsreport")().init().catch(function(err) { console.error("Error starting jsreport:", err); process.exit(1); })'
           )
-          return
       }
     })
   })
 
-  it('should not work on empty directory', function () {
-    var dir = utils.getTempDir('win-install-empty')
-    var installAsync = winInstall({ context: { cwd: dir } })
+  it('should not work on empty directory', () => {
+    const dir = utils.getTempDir('win-install-empty')
+    const installAsync = winInstall({ context: { cwd: dir } })
 
     if (!IS_WINDOWS) {
       should(installAsync).be.fulfilledWith({ installed: false, serviceName: null })
@@ -77,9 +75,9 @@ describe('win-install command', function () {
     }
   })
 
-  it('should not work on directory with package.json without name field', function () {
-    var dir = utils.getTempDir('win-install-packagejson-only')
-    var installAsync = winInstall({ context: { cwd: dir } })
+  it('should not work on directory with package.json without name field', () => {
+    const dir = utils.getTempDir('win-install-packagejson-only')
+    const installAsync = winInstall({ context: { cwd: dir } })
 
     if (!IS_WINDOWS) {
       should(installAsync).be.fulfilledWith({ installed: false, serviceName: null })
@@ -88,9 +86,9 @@ describe('win-install command', function () {
     }
   })
 
-  it('should not work on directory with package.json without main or scripts field', function () {
-    var dir = utils.getTempDir('win-install-packagejson-without-entry')
-    var installAsync = winInstall({ context: { cwd: dir } })
+  it('should not work on directory with package.json without main or scripts field', () => {
+    const dir = utils.getTempDir('win-install-packagejson-without-entry')
+    const installAsync = winInstall({ context: { cwd: dir } })
 
     if (!IS_WINDOWS) {
       should(installAsync).be.fulfilledWith({ installed: false, serviceName: null })
@@ -104,10 +102,10 @@ describe('win-install command', function () {
     // couple of minutes
     this.timeout(0)
 
-    var dir = utils.getTempDir('win-install-packagejson-ok')
-    var installAsync
+    const dir = utils.getTempDir('win-install-packagejson-ok')
+    let installAsync
 
-    utils.npmInstall(dir, function (error) {
+    utils.npmInstall(dir, (error) => {
       if (error) {
         return done(error)
       }
@@ -115,46 +113,44 @@ describe('win-install command', function () {
       installAsync = winInstall({ context: { cwd: dir } })
 
       installAsync
-      .then(function (serviceInfo) {
-        if (!IS_WINDOWS) {
-          should(serviceInfo.installed).be.eql(false)
-          return done()
-        }
-
-        childProcess.exec('sc query "' + serviceInfo.serviceName + '"', {
-          cwd: dir
-        }, function (error, stdout) {
-          if (error) {
-            return done(error)
+        .then(function (serviceInfo) {
+          if (!IS_WINDOWS) {
+            should(serviceInfo.installed).be.eql(false)
+            return done()
           }
 
-          if (stdout) {
-            should(stdout.indexOf('RUNNING') !== -1).be.eql(true)
-          } else {
-            return done(new Error('Can\' detect is service is running or not'))
-          }
-
-          should(serviceInfo.installed).be.eql(true)
-          should(serviceInfo.serviceName).be.eql('jsreport-server-for-cli-testing')
-
-          console.log('uninstalling service "' + serviceInfo.serviceName + '" after test case has finished..')
-
-          childProcess.exec('sc stop "' + serviceInfo.serviceName + '"', {
+          childProcess.exec('sc query "' + serviceInfo.serviceName + '"', {
             cwd: dir
-          }, function () {
-            childProcess.exec('sc delete "' + serviceInfo.serviceName + '"', {
+          }, function (error, stdout) {
+            if (error) {
+              return done(error)
+            }
+
+            if (stdout) {
+              should(stdout.indexOf('RUNNING') !== -1).be.eql(true)
+            } else {
+              return done(new Error('Can\' detect is service is running or not'))
+            }
+
+            should(serviceInfo.installed).be.eql(true)
+            should(serviceInfo.serviceName).be.eql('jsreport-server-for-cli-testing')
+
+            console.log('uninstalling service "' + serviceInfo.serviceName + '" after test case has finished..')
+
+            childProcess.exec('sc stop "' + serviceInfo.serviceName + '"', {
               cwd: dir
             }, function () {
-              done()
+              childProcess.exec('sc delete "' + serviceInfo.serviceName + '"', {
+                cwd: dir
+              }, function () {
+                done()
+              })
             })
           })
         })
-      })
-      .catch(done)
+        .catch(done)
     })
   })
 
-  after(function () {
-    utils.cleanTempDir(TEMP_DIRS)
-  })
+  after(() => utils.cleanTempDir(TEMP_DIRS))
 })
