@@ -117,7 +117,7 @@ describe('repair command', function () {
 
     const dir = utils.getTempDir('repair-packagejson-only')
 
-    const jsreportPackage = await repair({ context: { cwd: dir } })
+    await repair({ context: { cwd: dir } })
 
     // should generate default files
     should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
