@@ -94,7 +94,7 @@ describe('repair command', function () {
     this.timeout(0)
 
     const dir = utils.getTempDir('repair-with-specific-version')
-    const versionToInstall = '1.3.0'
+    const versionToInstall = jsreportVersionToTest
 
     const jsreportPackage = await repair({ context: { cwd: dir }, _: [null, versionToInstall] })
 

@@ -1,2 +1,2 @@
 
-module.exports = 'jsreport/jsreport#2.0.0-beta'
+module.exports = '2.x.x'
