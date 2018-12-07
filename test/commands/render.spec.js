@@ -46,6 +46,8 @@ describe('render command', () => {
   }
 
   before(function (done) {
+    process.env.JSREPORT_CLI = true
+
     // disabling timeout because npm install could take a
     // couple of seconds
     this.timeout(0)
@@ -118,6 +120,8 @@ describe('render command', () => {
   })
 
   after(function () {
+    delete process.env.JSREPORT_CLI
+
     // disabling timeout because removing files could take a
     // couple of seconds
     this.timeout(0)
@@ -260,8 +264,10 @@ describe('render command', () => {
 
   describe('when using local instance with keepAlive option', () => {
     let daemonProcess
+    let localPathToSocketDir
+    let localPathToWorkerSocketDir
 
-    before(function () {
+    before(() => {
       // starting in specific port
       fs.writeFileSync(
         path.join(pathToTempProject, 'jsreport.config.json'),
@@ -271,10 +277,27 @@ describe('render command', () => {
       )
     })
 
-    after(() => {
+    beforeEach(() => {
+      localPathToSocketDir = path.join(pathToTempProject, `sock-dir-${nanoid(7)}`)
+      localPathToWorkerSocketDir = path.join(pathToTempProject, `workerSock-dir-${nanoid(7)}`)
+
+      utils.tryCreate(localPathToSocketDir)
+      utils.tryCreate(localPathToWorkerSocketDir)
+    })
+
+    afterEach(async () => {
       if (daemonProcess) {
-        process.kill(daemonProcess.pid)
-        process.kill(daemonProcess.proc.pid)
+        if (daemonProcess.pid != null) {
+          try {
+            process.kill(daemonProcess.pid)
+          } catch (e) {}
+        }
+
+        if (daemonProcess.proc && daemonProcess.proc.pid != null) {
+          try {
+            process.kill(daemonProcess.proc.pid)
+          } catch (e) {}
+        }
       }
     })
 
@@ -293,14 +316,15 @@ describe('render command', () => {
         out: randomFile,
         context: {
           cwd: pathToTempProject,
-          sockPath: pathToSocketDir,
-          workerSockPath: pathToWorkerSocketDir,
+          sockPath: localPathToSocketDir,
+          workerSockPath: localPathToWorkerSocketDir,
           getInstance: getInstance,
           initInstance: initInstance
         }
       })
 
       daemonProcess = info.daemonProcess
+
       should(info.fromDaemon).be.eql(true)
       should(fs.existsSync(info.output)).be.eql(true)
 
@@ -315,15 +339,60 @@ describe('render command', () => {
         out: randomFile,
         context: {
           cwd: pathToTempProject,
-          sockPath: pathToSocketDir,
-          workerSockPath: pathToWorkerSocketDir,
+          sockPath: localPathToSocketDir,
+          workerSockPath: localPathToWorkerSocketDir,
           getInstance: getInstance,
           initInstance: initInstance
         }
       })
 
       should(info2.fromDaemon).be.eql(true)
+      should(info2.daemonProcess == null).be.eql(true)
       should(fs.existsSync(info2.output)).be.eql(true)
+    })
+
+    it('should render normally when there are concurrent call and daemon process has not started', async function () {
+      this.timeout(0)
+
+      const concurrentRenders = 5
+      const files = []
+      const renders = []
+
+      for (let i = 0; i < concurrentRenders; i++) {
+        let randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
+
+        files.push(randomFile)
+
+        renders.push(
+          render({
+            verbose: true,
+            keepAlive: true,
+            template: {
+              content: '<h1>Rendering in daemon process (first time)</h1>',
+              engine: 'handlebars',
+              recipe: 'html'
+            },
+            out: randomFile,
+            context: {
+              cwd: pathToTempProject,
+              sockPath: localPathToSocketDir,
+              workerSockPath: localPathToWorkerSocketDir,
+              getInstance: getInstance,
+              initInstance: initInstance
+            }
+          })
+        )
+      }
+
+      const results = await Promise.all(renders)
+
+      daemonProcess = results[0].daemonProcess
+
+      const mainDaemonProcessId = daemonProcess.pid
+
+      results.should.matchEach((info) => should(info.fromDaemon).be.eql(true))
+      results.should.matchEach((info) => should(info.daemonProcess.pid).be.eql(mainDaemonProcessId))
+      files.should.matchEach((file) => should(fs.existsSync(file)).be.eql(true))
     })
   })
 
