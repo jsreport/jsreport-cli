@@ -7,9 +7,9 @@
     "jsreport": "cli.js"
   },
   "scripts": {
-    "test": "mocha --recursive \"./test/commander.spec.js\" \"./test/cli/cli.spec.js\" \"./test/commands/**/*.spec.js\" --timeout 15000 --exit",
-    "test-integration": "mocha --recursive \"./test/integration/**/*.spec.js\" --timeout 15000",
-    "test:watch": "mocha --recursive \"./test/commander.spec.js\" \"./test/commands/**/*.spec.js\" --timeout 15000 --exit --watch",
+    "test": "mocha --recursive \"./test/commander.spec.js\" \"./test/cli/cli.spec.js\" \"./test/commands/**/*.spec.js\" --timeout 20000 --exit",
+    "test-integration": "mocha --recursive \"./test/integration/**/*.spec.js\" --timeout 20000",
+    "test:watch": "mocha --recursive \"./test/commander.spec.js\" \"./test/commands/**/*.spec.js\" --timeout 20000 --exit --watch",
     "prepublish": "in-publish && standard || not-in-publish"
   },
   "homepage": "https://github.com/jsreport/jsreport-cli",
