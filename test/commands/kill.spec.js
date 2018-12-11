@@ -1,5 +1,6 @@
 const path = require('path')
 const fs = require('fs')
+const nanoid = require('nanoid')
 const should = require('should')
 const jsreportVersionToTest = require('../jsreportVersionToTest')
 const utils = require('../utils')
@@ -8,8 +9,6 @@ const kill = require('../../lib/commands/kill').handler
 
 describe('kill command', () => {
   let pathToTempProject
-  let pathToSocketDir
-  let pathToWorkerSocketDir
   let port = 9398
 
   before(function (done) {
@@ -58,22 +57,26 @@ describe('kill command', () => {
         ].join('\n')
       )
 
-      pathToSocketDir = path.join(absoluteDir, 'sock-dir')
-      pathToWorkerSocketDir = path.join(absoluteDir, 'workerSock-dir')
-
-      utils.tryCreate(pathToSocketDir)
-      utils.tryCreate(pathToWorkerSocketDir)
-
       utils.npmInstall(pathToTempProject, done)
     })
   })
 
   describe('when there is no daemon instance running', () => {
+    let localPathToWorkerSocketDir
+
+    beforeEach(() => {
+      const localPathToSocketDir = path.join(pathToTempProject, `sock-dir-${nanoid(7)}`)
+      localPathToWorkerSocketDir = path.join(pathToTempProject, `workerSock-dir-${nanoid(7)}`)
+
+      utils.tryCreate(localPathToSocketDir)
+      utils.tryCreate(localPathToWorkerSocketDir)
+    })
+
     it('should fail searching daemon by current working directory', () => {
       return kill({
         context: {
           cwd: pathToTempProject,
-          workerSockPath: pathToWorkerSocketDir
+          workerSockPath: localPathToWorkerSocketDir
         }
       }).should.be.rejected()
     })
@@ -82,7 +85,7 @@ describe('kill command', () => {
       return kill({
         context: {
           cwd: pathToTempProject,
-          workerSockPath: pathToWorkerSocketDir
+          workerSockPath: localPathToWorkerSocketDir
         },
         _: [null, 'zzzzzzzzzz']
       }).should.be.rejected()
@@ -90,6 +93,7 @@ describe('kill command', () => {
   })
 
   describe('when there is daemon instance running', () => {
+    let localPathToWorkerSocketDir
     let childInfo
     let child
 
@@ -98,9 +102,15 @@ describe('kill command', () => {
 
       console.log('spawning a daemon jsreport instance for the test suite..')
 
+      const localPathToSocketDir = path.join(pathToTempProject, `sock-dir-${nanoid(7)}`)
+      localPathToWorkerSocketDir = path.join(pathToTempProject, `workerSock-dir-${nanoid(7)}`)
+
+      utils.tryCreate(localPathToSocketDir)
+      utils.tryCreate(localPathToWorkerSocketDir)
+
       const info = await keepAliveProcess({
-        mainSockPath: pathToSocketDir,
-        workerSockPath: pathToWorkerSocketDir,
+        mainSockPath: localPathToSocketDir,
+        workerSockPath: localPathToWorkerSocketDir,
         cwd: pathToTempProject
       })
       console.log('daemonized jsreport instance is ready..')
@@ -113,7 +123,7 @@ describe('kill command', () => {
       const result = await kill({
         context: {
           cwd: pathToTempProject,
-          workerSockPath: pathToWorkerSocketDir
+          workerSockPath: localPathToWorkerSocketDir
         }
       })
       should(result).not.be.undefined()
@@ -124,7 +134,7 @@ describe('kill command', () => {
       const result = await kill({
         context: {
           cwd: pathToTempProject,
-          workerSockPath: pathToWorkerSocketDir
+          workerSockPath: localPathToWorkerSocketDir
         },
         _: [null, childInfo.pid]
       })
@@ -137,7 +147,7 @@ describe('kill command', () => {
       const result = await kill({
         context: {
           cwd: pathToTempProject,
-          workerSockPath: pathToWorkerSocketDir
+          workerSockPath: localPathToWorkerSocketDir
         },
         _: [null, childInfo.uid]
       })
