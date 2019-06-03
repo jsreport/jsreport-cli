@@ -638,7 +638,7 @@ describe('commander', () => {
         }
       }
 
-      cli.registerCommand(testCommand, { ignoreEntryPoint: true })
+      cli.registerCommand(testCommand)
 
       cli.on('started', (err) => {
         if (err) {

@@ -86,8 +86,8 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: (argv) => {
-          instanceInHandler = argv.context.jsreport
+        handler: async (argv) => {
+          instanceInHandler = await argv.context.getInstance()
           return instanceInHandler
         }
       }
@@ -118,7 +118,9 @@ describe('commander', () => {
           should(instanceInHandler).be.exactly(instanceInEvent)
           should(result).be.exactly(instanceInHandler)
 
-          instanceInHandler.express.server.close()
+          if (instanceInHandler.express && instanceInHandler.express.server) {
+            instanceInHandler.express.server.close()
+          }
 
           done()
         }, 200)
@@ -153,8 +155,8 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: (argv) => {
-          instanceInHandler = argv.context.jsreport
+        handler: async (argv) => {
+          instanceInHandler = await argv.context.getInstance()
           return instanceInHandler
         }
       }
@@ -185,7 +187,9 @@ describe('commander', () => {
           should(instanceInHandler).be.exactly(instanceInEvent)
           should(result).be.exactly(instanceInHandler)
 
-          instanceInHandler.express.server.close()
+          if (instanceInHandler.express && instanceInHandler.express.server) {
+            instanceInHandler.express.server.close()
+          }
 
           done()
         }, 200)
@@ -205,8 +209,9 @@ describe('commander', () => {
       const testCommand = {
         command: 'test',
         description: 'test command desc',
-        handler: (argv) => {
-          instanceInHandler = argv.context.jsreport
+        handler: async (argv) => {
+          instanceInHandler = await argv.context.getInstance()
+          await argv.context.initInstance(instanceInHandler)
           return instanceInHandler
         }
       }
@@ -229,7 +234,9 @@ describe('commander', () => {
           should(instanceInitializingCalled).be.eql(true)
           should(result).be.exactly(instanceInHandler)
 
-          instanceInHandler.express.server.close()
+          if (instanceInHandler.express && instanceInHandler.express.server) {
+            instanceInHandler.express.server.close()
+          }
 
           done()
         }, 200)

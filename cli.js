@@ -41,8 +41,7 @@ function initCLI (env) {
     // if no local installation is found,
     // try to detect if some global command was specified
     const globalCliHandler = commander(cwd, {
-      builtInCommands: [help, init, repair, configure, render],
-      ignoreEntryPointCommands: ['help', 'init', 'repair', 'configure', 'render']
+      builtInCommands: [help, init, repair, configure, render]
     })
 
     globalCliHandler.on('started', (err, info) => {
@@ -75,7 +74,11 @@ function initCLI (env) {
       console.log('Local jsreport-cli is', env.modulePackage.version)
     }
 
-    localCommander = require(path.join(path.dirname(env.modulePath), 'lib/commander.js'))(cwd)
+    if (process.env.JSREPORT_CLI_DEV === 'enabled') {
+      localCommander = require(path.join(cwd, 'lib/commander.js'))(cwd)
+    } else {
+      localCommander = require(path.join(path.dirname(env.modulePath), 'lib/commander.js'))(cwd)
+    }
 
     // start processing
     localCommander.start(args)
