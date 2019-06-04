@@ -12,7 +12,7 @@ describe('cli', () => {
   })
 
   it('--help should return message', () => {
-    exec('--help').should.match(/Usage: jsreport/)
+    exec('--help').should.match(/Usage:\n\njsreport/)
   })
 
   it('"help config" should return message', () => {
