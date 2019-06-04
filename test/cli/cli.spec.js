@@ -7,12 +7,24 @@ describe('cli', () => {
   before(init)
   beforeEach(clean)
 
+  it('should fail when passing unknown option', () => {
+    should(() => {
+      exec('--unknown-arg value')
+    }).throw(/Unknown argument/)
+  })
+
   it('--version should return version', () => {
     exec('--version').should.match(/cli version/)
   })
 
   it('--help should return message', () => {
     exec('--help').should.match(/Usage:\n\njsreport/)
+  })
+
+  it('should fail when command receives unknown option', () => {
+    should(() => {
+      exec('help --unknown-arg value')
+    }).throw(/Unknown argument/)
   })
 
   it('"help config" should return message', () => {
