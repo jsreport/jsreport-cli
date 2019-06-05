@@ -91,7 +91,7 @@ describe('help command', () => {
           _: ['help', 'render'],
           context: {
             cwd: pathToTempProject,
-            getCommandHelp: () => ({ output: commandInfo })
+            getCommandHelp: async () => ({ output: commandInfo })
           }
         }).then((helpOutput) => {
           should(commandInfo).be.eql(helpOutput.output)
