@@ -25,6 +25,19 @@ describe('commander', () => {
       cli.on('initialized', done)
     })
 
+    it('should expose cliName', () => {
+      const cli = commander()
+
+      should(cli.cliName).be.String()
+      should(cli.cliName).not.be.empty()
+    })
+
+    it('should allow to customize cliName', () => {
+      const cli = commander(undefined, { cliName: 'custom-cli' })
+
+      should(cli.cliName).be.eql('custom-cli')
+    })
+
     it('should have a method to get registered commands', () => {
       const cli = commander()
 

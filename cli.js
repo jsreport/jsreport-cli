@@ -33,11 +33,12 @@ const cli = new Liftoff({
 cli.launch({}, initCLI)
 
 function initCLI (env) {
+  const isCLIDev = process.env.JSREPORT_CLI_DEV === 'enabled'
   const args = process.argv.slice(2)
   const cwd = process.cwd()
   let localCommander
 
-  if (!env.modulePath) {
+  if (!isCLIDev && !env.modulePath) {
     // if no local installation is found,
     // try to detect if some global command was specified
     const globalCliHandler = commander(cwd, {
@@ -67,16 +68,16 @@ function initCLI (env) {
 
     globalCliHandler.start(args)
   } else {
-    // Check for semver difference between global cli and local installation
-    if (semver.gt(cliPackageJson.version, env.modulePackage.version)) {
-      console.log('Warning: jsreport-cli version mismatch:')
-      console.log('Global jsreport-cli is', cliPackageJson.version)
-      console.log('Local jsreport-cli is', env.modulePackage.version)
-    }
-
-    if (process.env.JSREPORT_CLI_DEV === 'enabled') {
-      localCommander = require(path.join(cwd, 'lib/commander.js'))(cwd)
+    if (isCLIDev) {
+      localCommander = require(path.join(cwd, 'lib/commander.js'))(cwd, { cliName: 'jsreport' })
     } else {
+      // Check for semver difference between global cli and local installation
+      if (semver.gt(cliPackageJson.version, env.modulePackage.version)) {
+        console.log('Warning: jsreport-cli version mismatch:')
+        console.log('Global jsreport-cli is', cliPackageJson.version)
+        console.log('Local jsreport-cli is', env.modulePackage.version)
+      }
+
       localCommander = require(path.join(path.dirname(env.modulePath), 'lib/commander.js'))(cwd)
     }
 
