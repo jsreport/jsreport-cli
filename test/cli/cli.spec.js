@@ -9,6 +9,12 @@ describe('cli', () => {
 
   it('should fail when passing unknown option', () => {
     should(() => {
+      exec('--unknown value')
+    }).throw(/Unknown argument/)
+  })
+
+  it('should fail when passing unknown dashed option', () => {
+    should(() => {
       exec('--unknown-arg value')
     }).throw(/Unknown argument/)
   })
@@ -23,7 +29,13 @@ describe('cli', () => {
 
   it('should fail when command receives unknown option', () => {
     should(() => {
-      exec('help --unknown-arg value')
+      exec(' --unknown value')
+    }).throw(/Unknown argument/)
+  })
+
+  it('should fail when command receives unknown dashed option', () => {
+    should(() => {
+      exec(' --unknown-args value')
     }).throw(/Unknown argument/)
   })
 
