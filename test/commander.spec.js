@@ -110,6 +110,21 @@ describe('commander', () => {
       should(cli._commands.test).be.exactly(testCommand)
     })
 
+    it('should register command with positional arguments', () => {
+      const cli = commander()
+
+      const testCommand = {
+        command: 'test <arg>',
+        description: 'test command desc',
+        handler: () => {}
+      }
+
+      cli.registerCommand(testCommand)
+
+      // test reference equality
+      should(cli._commands.test).be.exactly(testCommand)
+    })
+
     it('should return instance', () => {
       const cli = commander()
 
@@ -173,6 +188,24 @@ describe('commander', () => {
       const result = await cli.executeCommand('test', { args: true })
 
       should(result).be.exactly(cmdArgs)
+    })
+
+    it('should handle command with positional arguments', async () => {
+      const cli = commander()
+
+      const testCommand = {
+        command: 'test <arg>',
+        description: 'test command desc',
+        handler: (args) => {
+          return args.arg
+        }
+      }
+
+      cli.registerCommand(testCommand)
+
+      const result = await cli.executeCommand('test', { arg: 'value' })
+
+      should(result).be.eql('value')
     })
 
     it('should fail when command sync handler fails', () => {
