@@ -4,6 +4,7 @@ const nanoid = require('nanoid')
 const should = require('should')
 const jsreportVersionToTest = require('../jsreportVersionToTest')
 const utils = require('../utils')
+const daemonHandler = require('../../lib/daemonHandler')
 const keepAliveProcess = require('../../lib/keepAliveProcess')
 const kill = require('../../lib/commands/kill').handler
 
@@ -76,7 +77,8 @@ describe('kill command', () => {
       return kill({
         context: {
           cwd: pathToTempProject,
-          workerSockPath: localPathToWorkerSocketDir
+          workerSockPath: localPathToWorkerSocketDir,
+          daemonHandler
         }
       }).should.be.rejected()
     })
@@ -85,7 +87,8 @@ describe('kill command', () => {
       return kill({
         context: {
           cwd: pathToTempProject,
-          workerSockPath: localPathToWorkerSocketDir
+          workerSockPath: localPathToWorkerSocketDir,
+          daemonHandler
         },
         _: [null, 'zzzzzzzzzz']
       }).should.be.rejected()
@@ -123,7 +126,8 @@ describe('kill command', () => {
       const result = await kill({
         context: {
           cwd: pathToTempProject,
-          workerSockPath: localPathToWorkerSocketDir
+          workerSockPath: localPathToWorkerSocketDir,
+          daemonHandler
         }
       })
       should(result).not.be.undefined()
@@ -134,7 +138,8 @@ describe('kill command', () => {
       const result = await kill({
         context: {
           cwd: pathToTempProject,
-          workerSockPath: localPathToWorkerSocketDir
+          workerSockPath: localPathToWorkerSocketDir,
+          daemonHandler
         },
         _: [null, childInfo.pid]
       })
@@ -147,7 +152,8 @@ describe('kill command', () => {
       const result = await kill({
         context: {
           cwd: pathToTempProject,
-          workerSockPath: localPathToWorkerSocketDir
+          workerSockPath: localPathToWorkerSocketDir,
+          daemonHandler
         },
         _: [null, childInfo.uid]
       })

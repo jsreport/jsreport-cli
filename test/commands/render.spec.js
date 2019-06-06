@@ -3,6 +3,8 @@ const fs = require('fs')
 const childProcess = require('child_process')
 const should = require('should')
 const nanoid = require('nanoid')
+const daemonHandler = require('../../lib/daemonHandler')
+const keepAliveProcess = require('../../lib/keepAliveProcess')
 const jsreportVersionToTest = require('../jsreportVersionToTest')
 const utils = require('../utils')
 const instanceHandler = require('../../lib/instanceHandler')
@@ -318,6 +320,8 @@ describe('render command', () => {
           cwd: pathToTempProject,
           sockPath: localPathToSocketDir,
           workerSockPath: localPathToWorkerSocketDir,
+          daemonHandler,
+          keepAliveProcess,
           getInstance: getInstance,
           initInstance: initInstance
         }
@@ -341,6 +345,8 @@ describe('render command', () => {
           cwd: pathToTempProject,
           sockPath: localPathToSocketDir,
           workerSockPath: localPathToWorkerSocketDir,
+          daemonHandler,
+          keepAliveProcess,
           getInstance: getInstance,
           initInstance: initInstance
         }
@@ -377,6 +383,8 @@ describe('render command', () => {
               cwd: pathToTempProject,
               sockPath: localPathToSocketDir,
               workerSockPath: localPathToWorkerSocketDir,
+              daemonHandler,
+              keepAliveProcess,
               getInstance: getInstance,
               initInstance: initInstance
             }
@@ -423,6 +431,8 @@ describe('render command', () => {
           cwd: pathToTempProject,
           sockPath: pathToSocketDir,
           workerSockPath: pathToWorkerSocketDir,
+          daemonHandler,
+          keepAliveProcess,
           getInstance: getInstance,
           initInstance: initInstance
         },
@@ -448,6 +458,8 @@ describe('render command', () => {
           cwd: pathToTempProject,
           sockPath: pathToSocketDir,
           workerSockPath: pathToWorkerSocketDir,
+          daemonHandler,
+          keepAliveProcess,
           getInstance: getInstance,
           initInstance: initInstance
         },
@@ -473,6 +485,8 @@ describe('render command', () => {
           cwd: pathToTempProject,
           sockPath: pathToSocketDir,
           workerSockPath: pathToWorkerSocketDir,
+          daemonHandler,
+          keepAliveProcess,
           getInstance: getInstance,
           initInstance: initInstance
         },
@@ -502,6 +516,8 @@ describe('render command', () => {
           cwd: pathToTempProject,
           sockPath: pathToSocketDir,
           workerSockPath: pathToWorkerSocketDir,
+          daemonHandler,
+          keepAliveProcess,
           getInstance: getInstance,
           initInstance: initInstance
         },
@@ -531,6 +547,8 @@ describe('render command', () => {
           cwd: pathToTempProject,
           sockPath: pathToSocketDir,
           workerSockPath: pathToWorkerSocketDir,
+          daemonHandler,
+          keepAliveProcess,
           getInstance: getInstance,
           initInstance: initInstance
         },
