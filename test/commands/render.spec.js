@@ -1,392 +1,174 @@
 const path = require('path')
 const fs = require('fs')
-const childProcess = require('child_process')
 const should = require('should')
 const nanoid = require('nanoid')
 const daemonHandler = require('../../lib/daemonHandler')
-const keepAliveProcess = require('../../lib/keepAliveProcess')
-const jsreportVersionToTest = require('../jsreportVersionToTest')
-const utils = require('../utils')
-const instanceHandler = require('../../lib/instanceHandler')
-const render = require('../../lib/commands/render').handler
+
+const { getTempDir, createTempDir, setup, init, exec } = require('../../testUtils')({
+  cliModuleName: path.join(__dirname, '../../'),
+  baseDir: path.join(__dirname, '../temp'),
+  rootDirectory: path.join(__dirname, '../../'),
+  defaultExtensions: [
+    'jsreport-fs-store',
+    'jsreport-templates',
+    'jsreport-handlebars',
+    'jsreport-express',
+    'jsreport-authentication'
+  ],
+  defaultOpts: {
+    loadConfig: true,
+    store: {
+      provider: 'fs'
+    }
+  },
+  deps: {
+    extend: require('node.extend.without.arrays'),
+    mkdirp: require('mkdirp'),
+    rimraf: require('rimraf'),
+    execa: require('execa')
+  }
+})
 
 describe('render command', () => {
-  let pathToTempProject
-  let pathToSocketDir
-  let pathToWorkerSocketDir
-  let currentInstance
-
-  const originalDevConfig = {
-    authentication: {
-      cookieSession: {
-        secret: '<your strong secret>'
-      },
-      admin: {
-        username: 'admin',
-        password: 'password'
-      },
-      enabled: false
-    }
-  }
-
-  function getInstance () {
-    return (
-      instanceHandler
-        .find(pathToTempProject)
-        .then(function (instanceInfo) {
-          return instanceInfo.instance
-        })
-    )
-  }
-
-  function initInstance (instance) {
-    currentInstance = instance
-
-    return (
-      instanceHandler.initialize(instance, false)
-    )
-  }
-
-  before(function (done) {
-    process.env.JSREPORT_CLI = true
-
-    // disabling timeout because npm install could take a
-    // couple of seconds
-    this.timeout(0)
-
-    utils.cleanTempDir(['render-project'])
-
-    utils.createTempDir(['render-project'], (dir, absoluteDir) => {
-      pathToTempProject = absoluteDir
-
-      fs.writeFileSync(
-        path.join(absoluteDir, './package.json'),
-        JSON.stringify({
-          name: 'render-project',
-          dependencies: {
-            jsreport: jsreportVersionToTest
-          },
-          jsreport: {
-            entryPoint: 'server.js'
-          }
-        }, null, 2)
-      )
-
-      fs.writeFileSync(
-        path.join(absoluteDir, 'jsreport.config.json'),
-        JSON.stringify(originalDevConfig, null, 2)
-      )
-
-      fs.writeFileSync(
-        path.join(absoluteDir, './server.js'),
-        [
-          'const jsreport = require("jsreport")()',
-          'if (process.env.JSREPORT_CLI) {',
-          'module.exports = jsreport',
-          '} else {',
-          'jsreport.init().catch(function (e) {',
-          'console.error("error on jsreport init")',
-          'console.error(e.stack)',
-          'process.exit(1)',
-          '})',
-          '}'
-        ].join('\n')
-      )
-
-      pathToSocketDir = path.join(absoluteDir, 'sock-dir')
-      pathToWorkerSocketDir = path.join(absoluteDir, 'workerSock-dir')
-
-      utils.tryCreate(pathToSocketDir)
-      utils.tryCreate(pathToWorkerSocketDir)
-    })
-
-    utils.npmInstall(pathToTempProject, done)
-  })
-
-  beforeEach(() => {
-    // deleting cache of package.json to allow run the tests on the same project
-    delete require.cache[require.resolve(path.join(pathToTempProject, './package.json'))]
-    delete require.cache[require.resolve(path.join(pathToTempProject, './jsreport.config.json'))]
-  })
-
-  afterEach(() => {
-    if (currentInstance && currentInstance.express && currentInstance.express.server) {
-      currentInstance.express.server.close()
-    }
-
-    // reset jsreport.config.json to original value
-    fs.writeFileSync(
-      path.join(pathToTempProject, 'jsreport.config.json'),
-      JSON.stringify(originalDevConfig, null, 2)
-    )
-  })
-
-  after(function () {
-    delete process.env.JSREPORT_CLI
-
-    // disabling timeout because removing files could take a
-    // couple of seconds
-    this.timeout(0)
-
-    utils.cleanTempDir(['render-project'])
-  })
-
   describe('when using local instance', () => {
-    common('local')
+    const dirName = 'render-local'
 
-    describe('and when authentication is enabled', () => {
-      beforeEach(() => {
-        // enabling authentication
-        fs.writeFileSync(
-          path.join(pathToTempProject, 'jsreport.config.json'),
-          JSON.stringify({
-            extensions: {
-              authentication: {
-                cookieSession: {
-                  secret: '<your strong secret>'
-                },
-                admin: {
-                  username: 'admin',
-                  password: 'password'
-                },
-                enabled: true
-              }
-            }
-          }, null, 2)
-        )
-      })
-
-      common('local')
+    beforeEach(async () => {
+      await setup(dirName)
     })
+
+    common(dirName)
   })
 
-  describe('when using remote instance', () => {
-    let child
-    let childWithAuth
+  describe('when using local instance (authentication enabled)', () => {
+    const dirName = 'render-local-with-auth'
 
-    before(function (done) {
-      this.timeout(0)
-
-      console.log('spawning a remote jsreport instance for the test suite..')
-
-      child = childProcess.spawn(process.execPath, ['server.js'], {
-        cwd: pathToTempProject,
-        stdio: 'pipe',
-        env: {
-          PORT: 7869
-        }
-      })
-
-      child.on('error', function (err) {
-        done(err)
-      })
-
-      child.stdout.setEncoding('utf8')
-
-      child.stdout.on('data', function (msg) {
-        if (msg.indexOf('reporter initialized') !== -1) {
-          console.log('remote jsreport instance is ready..')
-          done()
-        }
-      })
-    })
-
-    after(function () {
-      if (child) {
-        child.kill()
-      }
-
-      if (childWithAuth) {
-        childWithAuth.kill()
-      }
-    })
-
-    common('remote', {
-      hostname: 'localhost',
-      port: 7869
-    })
-
-    describe('and when authentication is enabled', () => {
-      before(function (done) {
-        this.timeout(0)
-
-        // enabling authentication
-        fs.writeFileSync(
-          path.join(pathToTempProject, 'jsreport.config.json'),
-          JSON.stringify({
-            extensions: {
-              authentication: {
-                cookieSession: {
-                  secret: '<your strong secret>'
-                },
-                admin: {
-                  username: 'admin',
-                  password: 'password'
-                },
-                enabled: true
-              }
-            }
-          }, null, 2)
-        )
-
-        console.log('spawning a remote jsreport instance with authentication for the test suite..')
-
-        childWithAuth = childProcess.spawn(process.execPath, ['server.js'], {
-          cwd: pathToTempProject,
-          stdio: 'pipe',
-          env: {
-            PORT: 7870
+    beforeEach(async () => {
+      await setup(dirName, [], undefined, {
+        extensions: {
+          authentication: {
+            cookieSession: {
+              secret: '<your strong secret>'
+            },
+            admin: {
+              username: 'admin',
+              password: 'password'
+            },
+            enabled: true
           }
-        })
-
-        childWithAuth.on('error', function (err) {
-          done(err)
-        })
-
-        childWithAuth.stdout.setEncoding('utf8')
-
-        childWithAuth.stdout.on('data', function (msg) {
-          if (msg.indexOf('reporter initialized') !== -1) {
-            console.log('remote jsreport instance with authentication is ready..')
-            done()
-          }
-        })
-      })
-
-      common('remote', {
-        hostname: 'localhost',
-        port: 7870,
-        auth: {
-          username: 'admin',
-          password: 'password'
         }
       })
     })
+
+    common(dirName)
   })
 
   describe('when using local instance with keepAlive option', () => {
-    let daemonProcess
+    const dirName = 'render-local-keepalive'
     let localPathToSocketDir
     let localPathToWorkerSocketDir
 
-    before(() => {
-      // starting in specific port
-      fs.writeFileSync(
-        path.join(pathToTempProject, 'jsreport.config.json'),
-        JSON.stringify({
-          httpPort: 7468
-        }, null, 2)
-      )
-    })
+    beforeEach(async () => {
+      await setup(dirName, [], undefined, {
+        httpPort: 9768
+      })
 
-    beforeEach(() => {
-      localPathToSocketDir = path.join(pathToTempProject, `sock-dir-${nanoid(7)}`)
-      localPathToWorkerSocketDir = path.join(pathToTempProject, `workerSock-dir-${nanoid(7)}`)
-
-      utils.tryCreate(localPathToSocketDir)
-      utils.tryCreate(localPathToWorkerSocketDir)
+      localPathToSocketDir = createTempDir(`${dirName}/sock`)
+      localPathToWorkerSocketDir = createTempDir(`${dirName}/sock/workerSock`)
     })
 
     afterEach(async () => {
-      if (daemonProcess) {
-        if (daemonProcess.pid != null) {
-          try {
-            process.kill(daemonProcess.pid)
-          } catch (e) {}
-        }
+      const fullDir = getTempDir(dirName)
+      const proc = await daemonHandler.findProcessByCWD(localPathToWorkerSocketDir, fullDir)
 
-        if (daemonProcess.proc && daemonProcess.proc.pid != null) {
-          try {
-            process.kill(daemonProcess.proc.pid)
-          } catch (e) {}
-        }
+      if (proc) {
+        await daemonHandler.kill(proc)
       }
     })
 
     it('should render normally and next calls to render should use the same daemon process', async function () {
-      this.timeout(0)
+      const fullDir = getTempDir(dirName)
+      const requestJSONPath = path.join(fullDir, 'request.json')
+      const outputPath = path.join(fullDir, `${nanoid(7)}.html`)
 
-      let randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
+      fs.writeFileSync(requestJSONPath, `
+        {
+          "template": {
+            "content": "<h1>Test instance, render keepalive</h1>",
+            "engine": "none",
+            "recipe": "html"
+          }
+        }
+      `)
 
-      const info = await render({
-        keepAlive: true,
-        template: {
-          content: '<h1>Rendering in daemon process (first time)</h1>',
-          engine: 'handlebars',
-          recipe: 'html'
-        },
-        out: randomFile,
-        context: {
-          cwd: pathToTempProject,
-          sockPath: localPathToSocketDir,
-          workerSockPath: localPathToWorkerSocketDir,
-          daemonHandler,
-          keepAliveProcess,
-          getInstance: getInstance,
-          initInstance: initInstance
+      let cmd = `render --keepAlive --request=${requestJSONPath} --out=${outputPath}`
+
+      const { stdout } = await exec(dirName, cmd, {
+        env: {
+          cli_socketsDirectory: localPathToSocketDir
         }
       })
 
-      daemonProcess = info.daemonProcess
+      should(stdout).containEql('instance has been daemonized and initialized successfully')
+      should(fs.existsSync(outputPath)).be.eql(true)
+      should(fs.readFileSync(outputPath).toString()).containEql(`Test instance, render keepalive`)
 
-      should(info.fromDaemon).be.eql(true)
-      should(fs.existsSync(info.output)).be.eql(true)
+      const requestJSONPath2 = path.join(fullDir, 'request.json')
+      const outputPath2 = path.join(fullDir, `${nanoid(7)}.html`)
 
-      randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
+      fs.writeFileSync(requestJSONPath2, `
+        {
+          "template": {
+            "content": "<h1>Test instance, render keepalive (second time)</h1>",
+            "engine": "none",
+            "recipe": "html"
+          }
+        }
+      `)
 
-      const info2 = await render({
-        template: {
-          content: '<h1>Rendering in daemon process (second time)</h1>',
-          engine: 'handlebars',
-          recipe: 'html'
-        },
-        out: randomFile,
-        context: {
-          cwd: pathToTempProject,
-          sockPath: localPathToSocketDir,
-          workerSockPath: localPathToWorkerSocketDir,
-          daemonHandler,
-          keepAliveProcess,
-          getInstance: getInstance,
-          initInstance: initInstance
+      cmd = `render --verbose --keepAlive --request=${requestJSONPath2} --out=${outputPath2}`
+
+      const { stdout: stdout2 } = await exec(dirName, cmd, {
+        env: {
+          cli_socketsDirectory: localPathToSocketDir
         }
       })
 
-      should(info2.fromDaemon).be.eql(true)
-      should(info2.daemonProcess == null).be.eql(true)
-      should(fs.existsSync(info2.output)).be.eql(true)
+      should(stdout2).containEql('using instance daemonized previously')
+
+      should(fs.existsSync(outputPath2)).be.eql(true)
+      should(fs.readFileSync(outputPath2).toString()).containEql(`Test instance, render keepalive (second time)`)
     })
 
-    it('should render normally when there are concurrent call and daemon process has not started', async function () {
-      this.timeout(0)
-
+    it('should render normally when there are concurrent calls and daemon process has not started', async function () {
+      const fullDir = getTempDir(dirName)
       const concurrentRenders = 5
       const files = []
       const renders = []
 
-      for (let i = 0; i < concurrentRenders; i++) {
-        let randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
+      const requestJSONPath = path.join(fullDir, 'request.json')
 
-        files.push(randomFile)
+      fs.writeFileSync(requestJSONPath, `
+        {
+          "template": {
+            "content": "<h1>Test instance, render keepalive</h1>",
+            "engine": "none",
+            "recipe": "html"
+          }
+        }
+      `)
+
+      for (let i = 0; i < concurrentRenders; i++) {
+        let outputPath = path.join(fullDir, `${nanoid(7)}.html`)
+
+        files.push(outputPath)
+
+        const cmd = `render --keepAlive --request=${requestJSONPath} --out=${outputPath}`
 
         renders.push(
-          render({
-            verbose: true,
-            keepAlive: true,
-            template: {
-              content: '<h1>Rendering in daemon process (first time)</h1>',
-              engine: 'handlebars',
-              recipe: 'html'
-            },
-            out: randomFile,
-            context: {
-              cwd: pathToTempProject,
-              sockPath: localPathToSocketDir,
-              workerSockPath: localPathToWorkerSocketDir,
-              daemonHandler,
-              keepAliveProcess,
-              getInstance: getInstance,
-              initInstance: initInstance
+          exec(dirName, cmd, {
+            env: {
+              cli_socketsDirectory: localPathToSocketDir
             }
           })
         )
@@ -394,176 +176,287 @@ describe('render command', () => {
 
       const results = await Promise.all(renders)
 
-      daemonProcess = results[0].daemonProcess
+      const pid = results[0].stdout.match(/\(pid: (\d+)\)/)[1]
 
-      const mainDaemonProcessId = daemonProcess.pid
+      should(pid).be.ok()
 
-      results.should.matchEach((info) => should(info.fromDaemon).be.eql(true))
-      results.should.matchEach((info) => should(info.daemonProcess.pid).be.eql(mainDaemonProcessId))
-      files.should.matchEach((file) => should(fs.existsSync(file)).be.eql(true))
+      should(results).matchEach((o) => should(o.stdout).containEql('instance has been daemonized and initialized successfully'))
+      should(results).matchEach((o) => should(o.stdout.match(/\(pid: (\d+)\)/)[1]).be.eql(pid))
+      should(files).matchEach((file) => should(fs.existsSync(file)).be.eql(true))
     })
   })
 
-  function common (instanceType, remote) {
-    let remoteInfo = remote || {}
-    let serverUrl
-    let user
-    let password
+  describe('when using remote instance', () => {
+    const dirName = 'render-remote'
+    const remoteDirName = 'render-remote-instance'
+    const remotePort = 9387
+    let reporter
 
-    if (instanceType === 'remote') {
-      serverUrl = 'http://' + remoteInfo.hostname + ':' + remoteInfo.port
-    }
+    beforeEach(async () => {
+      await setup(dirName)
+      await setup(remoteDirName)
 
-    if (remoteInfo.auth) {
-      user = remoteInfo.auth.username
-      password = remoteInfo.auth.password
-    }
-
-    it('should handle a failed render', () => {
-      const randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
-
-      return render({
-        template: {
-          nanoid: 'unknown'
-        },
-        out: randomFile,
-        context: {
-          cwd: pathToTempProject,
-          sockPath: pathToSocketDir,
-          workerSockPath: pathToWorkerSocketDir,
-          daemonHandler,
-          keepAliveProcess,
-          getInstance: getInstance,
-          initInstance: initInstance
-        },
-        serverUrl: serverUrl,
-        user: user,
-        password: password
-      }).should.be.rejected()
+      reporter = await init(remoteDirName, { httpPort: remotePort })
     })
 
-    it('should render normally with request option', async () => {
-      const randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
+    afterEach(() => reporter && reporter.close())
 
-      const info = await render({
-        request: {
-          template: {
-            content: '<h1>Test ' + instanceType + ' instance, request option</h1>',
-            engine: 'none',
-            recipe: 'html'
+    common(dirName, {
+      url: `http://localhost:${remotePort}`
+    })
+  })
+
+  describe('when using remote instance (authentication enabled)', () => {
+    const dirName = 'render-remote-auth'
+    const remoteDirName = 'render-remote-auth-instance'
+    const remotePort = 9387
+
+    const adminUser = {
+      user: 'admin',
+      password: 'xxxx'
+    }
+
+    let reporter
+
+    beforeEach(async () => {
+      await setup(dirName)
+      await setup(remoteDirName)
+
+      reporter = await init(remoteDirName, {
+        httpPort: remotePort,
+        extensions: {
+          authentication: {
+            cookieSession: {
+              secret: 'secret string'
+            },
+            admin: {
+              username: adminUser.user,
+              password: adminUser.password
+            },
+            enabled: true
           }
-        },
-        out: randomFile,
-        context: {
-          cwd: pathToTempProject,
-          sockPath: pathToSocketDir,
-          workerSockPath: pathToWorkerSocketDir,
-          daemonHandler,
-          keepAliveProcess,
-          getInstance: getInstance,
-          initInstance: initInstance
-        },
-        serverUrl: serverUrl,
-        user: user,
-        password: password
+        }
       })
-
-      should(fs.existsSync(info.output)).be.eql(true)
     })
 
-    it('should render normally with template option', async () => {
-      const randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
+    afterEach(() => reporter && reporter.close())
 
-      const info = await render({
-        template: {
-          content: '<h1>Test ' + instanceType + ' instance, template option</h1>',
-          engine: 'none',
-          recipe: 'html'
-        },
-        out: randomFile,
-        context: {
-          cwd: pathToTempProject,
-          sockPath: pathToSocketDir,
-          workerSockPath: pathToWorkerSocketDir,
-          daemonHandler,
-          keepAliveProcess,
-          getInstance: getInstance,
-          initInstance: initInstance
-        },
-        serverUrl: serverUrl,
-        user: user,
-        password: password
+    common(dirName, {
+      url: `http://localhost:${remotePort}`,
+      user: adminUser.user,
+      password: adminUser.password
+    })
+  })
+
+  function common (dirName, remote) {
+    function addRemoteArgs (cmd, customUrl) {
+      if (remote) {
+        return `${cmd} --serverUrl=${customUrl != null ? customUrl : remote.url}${remote.user != null ? ` --user=${remote.user} --password=${remote.password}` : ''}`
+      }
+
+      return cmd
+    }
+
+    if (remote) {
+      it('should fail when connecting to invalid server', async () => {
+        const fullDir = getTempDir(dirName)
+        const requestJSONPath = path.join(fullDir, 'request.json')
+        const outputPath = path.join(fullDir, `${nanoid(7)}.html`)
+
+        fs.writeFileSync(requestJSONPath, `
+          {
+            "template": {
+              "content": "<h1>Test instance, request option</h1>",
+              "engine": "none",
+              "recipe": "html"
+            }
+          }
+        `)
+
+        const cmd = addRemoteArgs(`render --request=${requestJSONPath} --out=${outputPath}`, 'http://localhost:9988')
+
+        return should(exec(dirName, cmd)).be.rejectedWith(/Couldn't connect to remote jsreport server/)
       })
+    }
 
-      should(fs.existsSync(info.output)).be.eql(true)
+    it('should handle a failed render', async () => {
+      const fullDir = getTempDir(dirName)
+      const outputPath = path.join(fullDir, `${nanoid(7)}.html`)
+      let cmd = `render --template.shortid=unknown --out=${outputPath}`
+
+      if (remote) {
+        cmd = addRemoteArgs(cmd)
+      }
+
+      return should(exec(dirName, cmd)).be.rejectedWith(/Unable to find specified template/)
+    })
+
+    if (!remote) {
+      it('render failing instance should provide init error', () => {
+        const fullDir = getTempDir(dirName)
+        const contentPath = path.join(fullDir, 'content.html')
+        const outputPath = path.join(fullDir, `${nanoid(7)}.html`)
+        const configFilePath = path.join(fullDir, 'jsreport.config.json')
+
+        fs.writeFileSync(contentPath, `
+          <h1>Test instance, template option</h1>
+        `)
+
+        fs.writeFileSync(configFilePath, 'intention')
+
+        let cmd = `render --template.content=${contentPath} --template.engine=none --template.recipe=html --out=${outputPath}`
+
+        if (remote) {
+          cmd = addRemoteArgs(cmd)
+        }
+
+        return should(exec(dirName, cmd, {
+          env: {
+            configFile: configFilePath
+          }
+        })).be.rejectedWith(/Error parsing your configuration file/)
+      })
+    }
+
+    it('should render normally with request option (--request)', async () => {
+      const fullDir = getTempDir(dirName)
+      const requestJSONPath = path.join(fullDir, 'request.json')
+      const outputPath = path.join(fullDir, `${nanoid(7)}.html`)
+
+      fs.writeFileSync(requestJSONPath, `
+        {
+          "template": {
+            "content": "<h1>Test instance, request option</h1>",
+            "engine": "none",
+            "recipe": "html"
+          }
+        }
+      `)
+
+      let cmd = `render --request=${requestJSONPath} --out=${outputPath}`
+
+      if (remote) {
+        cmd = addRemoteArgs(cmd)
+      }
+
+      const { stdout } = await exec(dirName, cmd)
+
+      should(stdout).containEql('rendering has finished')
+      should(fs.existsSync(outputPath)).be.eql(true)
+      should(fs.readFileSync(outputPath).toString()).containEql(`Test instance, request option`)
+    })
+
+    it('should render normally with template option (--template=<file.json>)', async () => {
+      const fullDir = getTempDir(dirName)
+      const templateJSONPath = path.join(fullDir, 'template.json')
+      const outputPath = path.join(fullDir, `${nanoid(7)}.html`)
+
+      fs.writeFileSync(templateJSONPath, `
+        {
+          "content": "<h1>Test instance, template option</h1>",
+          "engine": "none",
+          "recipe": "html"
+        }
+      `)
+
+      let cmd = `render --template=${templateJSONPath} --out=${outputPath}`
+
+      if (remote) {
+        cmd = addRemoteArgs(cmd)
+      }
+
+      const { stdout } = await exec(dirName, cmd)
+
+      should(stdout).containEql('rendering has finished')
+      should(fs.existsSync(outputPath)).be.eql(true)
+      should(fs.readFileSync(outputPath).toString()).containEql(`Test instance, template option`)
+    })
+
+    it('should render normally with template option (--template.content=<content.html>)', async () => {
+      const fullDir = getTempDir(dirName)
+      const contentPath = path.join(fullDir, 'content.html')
+      const outputPath = path.join(fullDir, `${nanoid(7)}.html`)
+
+      fs.writeFileSync(contentPath, `
+        <h1>Test instance, template option</h1>
+      `)
+
+      let cmd = `render --template.content=${contentPath} --template.engine=none --template.recipe=html --out=${outputPath}`
+
+      if (remote) {
+        cmd = addRemoteArgs(cmd)
+      }
+
+      const { stdout } = await exec(dirName, cmd)
+
+      should(stdout).containEql('rendering has finished')
+      should(fs.existsSync(outputPath)).be.eql(true)
+      should(fs.readFileSync(outputPath).toString()).containEql(`Test instance, template option`)
     })
 
     it('should render normally with template and data option', async () => {
-      const randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
+      const fullDir = getTempDir(dirName)
+      const templateJSONPath = path.join(fullDir, 'template.json')
+      const dataJSONPath = path.join(fullDir, 'data.json')
+      const outputPath = path.join(fullDir, `${nanoid(7)}.html`)
 
-      const info = await render({
-        template: {
-          content: '<h1>Hello i\'m {{name}} and i\'m rendering from {{instanceType}} instance, template and data option</h1>',
-          engine: 'handlebars',
-          recipe: 'html'
-        },
-        data: {
-          name: 'jsreport',
-          instanceType: instanceType
-        },
-        out: randomFile,
-        context: {
-          cwd: pathToTempProject,
-          sockPath: pathToSocketDir,
-          workerSockPath: pathToWorkerSocketDir,
-          daemonHandler,
-          keepAliveProcess,
-          getInstance: getInstance,
-          initInstance: initInstance
-        },
-        serverUrl: serverUrl,
-        user: user,
-        password: password
-      })
+      fs.writeFileSync(templateJSONPath, `
+        {
+          "content": "<h1>Hello i'm {{name}}, using template and data option</h1>",
+          "engine": "handlebars",
+          "recipe": "html"
+        }
+      `)
 
-      should(fs.existsSync(info.output)).be.eql(true)
+      fs.writeFileSync(dataJSONPath, `
+        {
+          "name": "jsreport"
+        }
+      `)
+
+      let cmd = `render --template=${templateJSONPath} --data=${dataJSONPath} --out=${outputPath}`
+
+      if (remote) {
+        cmd = addRemoteArgs(cmd)
+      }
+
+      const { stdout } = await exec(dirName, cmd)
+
+      should(stdout).containEql('rendering has finished')
+      should(fs.existsSync(outputPath)).be.eql(true)
+      should(fs.readFileSync(outputPath).toString()).containEql(`Hello i'm jsreport, using template and data option`)
     })
 
     it('should store meta response to specified file', async () => {
-      const randomFile = path.join(pathToTempProject, nanoid(7) + '.html')
-      const randomMetaFile = path.join(pathToTempProject, nanoid(7) + '.json')
+      const fullDir = getTempDir(dirName)
+      const templateJSONPath = path.join(fullDir, 'template.json')
+      const outputPath = path.join(fullDir, `${nanoid(7)}.html`)
+      const metaPath = path.join(fullDir, `${nanoid(7)}.json`)
 
-      const info = await render({
-        request: {
-          template: {
-            content: '<h1>Test ' + instanceType + ' instance, request option</h1>',
-            engine: 'none',
-            recipe: 'html'
-          }
-        },
-        out: randomFile,
-        meta: randomMetaFile,
-        context: {
-          cwd: pathToTempProject,
-          sockPath: pathToSocketDir,
-          workerSockPath: pathToWorkerSocketDir,
-          daemonHandler,
-          keepAliveProcess,
-          getInstance: getInstance,
-          initInstance: initInstance
-        },
-        serverUrl: serverUrl,
-        user: user,
-        password: password
-      })
+      fs.writeFileSync(templateJSONPath, `
+        {
+          "content": "<h1>Test instance, meta option</h1>",
+          "engine": "none",
+          "recipe": "html"
+        }
+      `)
 
-      should(fs.existsSync(info.output)).be.eql(true)
-      should(fs.existsSync(info.meta)).be.eql(true)
+      let cmd = `render --template=${templateJSONPath} --meta=${metaPath} --out=${outputPath}`
 
-      // only test in remote instance since in local instance express extension is disabled
-      if (instanceType === 'remote') {
-        const meta = JSON.parse(fs.readFileSync(info.meta).toString())
-        meta.should.have.property('contentDisposition')
+      if (remote) {
+        cmd = addRemoteArgs(cmd)
+      }
+
+      const { stdout } = await exec(dirName, cmd)
+
+      should(stdout).containEql('rendering has finished')
+      should(fs.existsSync(outputPath)).be.eql(true)
+      should(fs.existsSync(metaPath)).be.eql(true)
+      should(fs.readFileSync(outputPath).toString()).containEql(`Test instance, meta option`)
+
+      if (remote) {
+        // only test in remote instance since in local instance express extension is disabled
+        should(JSON.parse(fs.readFileSync(metaPath).toString())).have.property('contentDisposition')
       }
     })
   }

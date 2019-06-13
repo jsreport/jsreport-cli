@@ -1,146 +1,114 @@
 const path = require('path')
 const fs = require('fs')
 const should = require('should')
-const jsreportVersionToTest = require('../jsreportVersionToTest')
-const utils = require('../utils')
-const stdMocks = require('std-mocks')
-const exitMock = utils.mockProcessExit
-const instanceHandler = require('../../lib/instanceHandler')
-const commander = require('../../lib/commander')
-const help = require('../../lib/commands/help').handler
+
+const { getTempDir, createTempDir, setup, exec } = require('../../testUtils')({
+  cliModuleName: path.join(__dirname, '../../'),
+  baseDir: path.join(__dirname, '../temp'),
+  rootDirectory: path.join(__dirname, '../../'),
+  defaultExtensions: [
+    'jsreport-fs-store'
+  ],
+  defaultOpts: {
+    store: {
+      provider: 'fs'
+    }
+  },
+  deps: {
+    extend: require('node.extend.without.arrays'),
+    mkdirp: require('mkdirp'),
+    rimraf: require('rimraf'),
+    execa: require('execa')
+  }
+})
 
 describe('help command', () => {
-  let pathToTempProject
+  const dirName = 'help-project'
 
-  before(function (done) {
-    // disabling timeout because npm install could take a
-    // couple of seconds
-    this.timeout(0)
+  beforeEach(async () => {
+    const customExtensionPath = getTempDir(`${dirName}/custom-extension`)
+    await setup(dirName, [customExtensionPath])
 
-    utils.cleanTempDir(['help-project'])
+    createTempDir(`${dirName}/custom-extension`)
 
-    utils.createTempDir(['help-project'], (dir, absoluteDir) => {
-      pathToTempProject = absoluteDir
-
-      fs.writeFileSync(
-        path.join(absoluteDir, './package.json'),
-        JSON.stringify({
-          name: 'help-project',
-          dependencies: {
-            jsreport: jsreportVersionToTest
-          },
-          jsreport: {
-            entryPoint: 'server.js'
-          }
-        }, null, 2)
-      )
-
-      fs.writeFileSync(
-        path.join(absoluteDir, './server.js'),
-        [
-          'const jsreport = require("jsreport")()',
-          'if (process.env.JSREPORT_CLI) {',
-          'module.exports = jsreport',
-          '} else {',
-          'jsreport.init().catch(function (e) {',
-          'console.error("error on jsreport init")',
-          'console.error(e.stack)',
-          'process.exit(1)',
-          '})',
-          '}'
-        ].join('\n')
-      )
-    })
-
-    utils.npmInstall(pathToTempProject, done)
-  })
-
-  beforeEach(() => {
-    // deleting cache of package.json to allow run the tests on the same project
-    delete require.cache[require.resolve(path.join(pathToTempProject, './package.json'))]
-  })
-
-  after(function () {
-    // disabling timeout because removing files could take a
-    // couple of seconds
-    this.timeout(0)
-
-    utils.cleanTempDir(['help-project'])
-  })
-
-  it('should print information of registered command', (done) => {
-    const cli = commander()
-
-    stdMocks.use()
-    exitMock.enable()
-
-    cli.on('parsed', (err) => {
-      let commandInfo
-
-      if (err) {
-        return done(err)
+    fs.writeFileSync(path.join(customExtensionPath, 'jsreport.config.js'), `
+      module.exports = {
+        name: 'custom',
+        main: () => {},
+        dependencies: []
       }
+    `)
 
-      process.nextTick(() => {
-        stdMocks.restore()
-        exitMock.restore()
+    fs.writeFileSync(path.join(customExtensionPath, 'index.js'), `
+      const config = require('./jsreport.config')
 
-        commandInfo = stdMocks.flush().stdout.join('\n')
+      module.exports = function (options) {
+        const newConfig = Object.assign({}, config)
 
-        help({
-          _: ['help', 'render'],
-          context: {
-            cwd: pathToTempProject,
-            getCommandHelp: async () => ({ output: commandInfo })
-          }
-        }).then((helpOutput) => {
-          should(commandInfo).be.eql(helpOutput.output)
-          done()
-        }).catch((e) => {
-          stdMocks.restore()
-          exitMock.restore()
-          done(e)
-        })
-      })
-    })
+        newConfig.options = options
+        newConfig.main = () => {}
+        newConfig.directory = __dirname
 
-    cli.start(['render', '-h'])
+        return newConfig
+      }
+    `)
+
+    const cliCustomExtensionPath = createTempDir(`${dirName}/custom-extension/cli`)
+
+    fs.writeFileSync(path.join(cliCustomExtensionPath, 'main.js'), `
+      module.exports = [{
+        command: 'custom',
+        description: 'custom command description',
+        handler: () => {}
+      }]
+    `)
   })
 
-  it('should print information of jsreport configuration format', async () => {
-    let currentInstance
+  it('should return help usage (help -h)', async () => {
+    const { stdout } = await exec(dirName, 'help -h')
+    should(stdout).containEql('Prints information about a command or topic')
+    should(stdout).containEql('Usage')
+    should(stdout).containEql('Positionals')
+    should(stdout).containEql('commandOrTopic')
+    should(stdout).containEql('Examples')
+  })
 
-    function getInstance () {
-      return (
-        instanceHandler
-          .find(pathToTempProject)
-          .then(function (instanceInfo) {
-            return instanceInfo.instance
-          })
-      )
-    }
+  it('should fail when missing commandOrTopic argument', () => {
+    return should(exec(dirName, 'help')).be.rejectedWith(/"commandOrTopic" argument is required/)
+  })
 
-    function initInstance (instance) {
-      currentInstance = instance
+  it('should not print when command does not exists', async () => {
+    const { stdout } = await exec(dirName, 'help unknown')
+    should(stdout).containEql('no information found for command or topic "unknown"')
+  })
 
-      return (
-        instanceHandler.initialize(instance, false)
-      )
-    }
+  it('should print information of registered command (help <command>)', async () => {
+    const { stdout } = await exec(dirName, 'help render')
+    should(stdout).containEql('Invoke a rendering process')
+    should(stdout).containEql('--request')
+    should(stdout).containEql('--template')
+  })
 
-    const result = await help({
-      _: ['help', 'config'],
-      context: {
-        cwd: pathToTempProject,
-        getInstance: getInstance,
-        initInstance: initInstance
-      }
-    })
+  it('should print information of jsreport configuration format (help config)', async () => {
+    const { stdout } = await exec(dirName, 'help config')
 
-    result.raw.should.match(/"extensions": <object> {/)
-    result.raw.should.match(/"allowLocalFilesAccess": <boolean>/)
-    result.raw.should.match(/"tempDirectory": <string>/)
+    should(stdout).containEql('Configuration format description')
+    should(stdout).containEql('"extensions": <object> {')
+    should(stdout).containEql('"allowLocalFilesAccess": <boolean>')
+    should(stdout).containEql('"tempDirectory": <string>')
+  })
 
-    await currentInstance.express.server.close()
+  it('should print information about itself (help help)', async () => {
+    const { stdout } = await exec(dirName, 'help help')
+    should(stdout).containEql('Prints information about a command or topic')
+    should(stdout).containEql('Usage')
+    should(stdout).containEql('Positionals')
+    should(stdout).containEql('commandOrTopic')
+    should(stdout).containEql('Examples')
+  })
+
+  it('should print information of command in extension (help <commandInExtension>)', async () => {
+    const { stdout } = await exec(dirName, 'help custom')
+    should(stdout).containEql('custom command description')
   })
 })

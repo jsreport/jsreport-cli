@@ -1,164 +1,77 @@
 const path = require('path')
-const fs = require('fs')
-const nanoid = require('nanoid')
 const should = require('should')
-const jsreportVersionToTest = require('../jsreportVersionToTest')
-const utils = require('../utils')
-const daemonHandler = require('../../lib/daemonHandler')
 const keepAliveProcess = require('../../lib/keepAliveProcess')
-const kill = require('../../lib/commands/kill').handler
+
+const { getTempDir, createTempDir, setup, exec } = require('../../testUtils')({
+  cliModuleName: path.join(__dirname, '../../'),
+  baseDir: path.join(__dirname, '../temp'),
+  rootDirectory: path.join(__dirname, '../../'),
+  defaultExtensions: [
+    'jsreport-fs-store'
+  ],
+  defaultOpts: {
+    store: {
+      provider: 'fs'
+    }
+  },
+  deps: {
+    extend: require('node.extend.without.arrays'),
+    mkdirp: require('mkdirp'),
+    rimraf: require('rimraf'),
+    execa: require('execa')
+  }
+})
 
 describe('kill command', () => {
-  let pathToTempProject
-  let port = 9398
-
-  before(function (done) {
-    // disabling timeout because npm install could take a
-    // couple of seconds
-    this.timeout(0)
-
-    utils.cleanTempDir(['kill-project'])
-
-    utils.createTempDir(['kill-project'], (dir, absoluteDir) => {
-      pathToTempProject = absoluteDir
-
-      fs.writeFileSync(
-        path.join(absoluteDir, './package.json'),
-        JSON.stringify({
-          name: 'kill-project',
-          dependencies: {
-            jsreport: jsreportVersionToTest
-          },
-          jsreport: {
-            entryPoint: 'server.js'
-          }
-        }, null, 2)
-      )
-
-      fs.writeFileSync(
-        path.join(absoluteDir, 'jsreport.config.json'),
-        JSON.stringify({
-          httpPort: port
-        }, null, 2)
-      )
-
-      fs.writeFileSync(
-        path.join(absoluteDir, './server.js'),
-        [
-          'const jsreport = require("jsreport")()',
-          'if (process.env.JSREPORT_CLI) {',
-          'module.exports = jsreport',
-          '} else {',
-          'jsreport.init().catch(function (e) {',
-          'console.error("error on jsreport init")',
-          'console.error(e.stack)',
-          'process.exit(1)',
-          '})',
-          '}'
-        ].join('\n')
-      )
-
-      utils.npmInstall(pathToTempProject, done)
-    })
-  })
+  let dirName = 'kill-project'
 
   describe('when there is no daemon instance running', () => {
-    let localPathToWorkerSocketDir
-
-    beforeEach(() => {
-      const localPathToSocketDir = path.join(pathToTempProject, `sock-dir-${nanoid(7)}`)
-      localPathToWorkerSocketDir = path.join(pathToTempProject, `workerSock-dir-${nanoid(7)}`)
-
-      utils.tryCreate(localPathToSocketDir)
-      utils.tryCreate(localPathToWorkerSocketDir)
+    beforeEach(async () => {
+      await setup(dirName)
     })
 
     it('should fail searching daemon by current working directory', () => {
-      return kill({
-        context: {
-          cwd: pathToTempProject,
-          workerSockPath: localPathToWorkerSocketDir,
-          daemonHandler
-        }
-      }).should.be.rejected()
+      return should(exec(dirName, 'kill')).be.rejectedWith(/there is no active daemon process in/)
     })
 
     it('should fail searching daemon by identifier', () => {
-      return kill({
-        context: {
-          cwd: pathToTempProject,
-          workerSockPath: localPathToWorkerSocketDir,
-          daemonHandler
-        },
-        _: [null, 'zzzzzzzzzz']
-      }).should.be.rejected()
+      return should(exec(dirName, 'kill zzzzzzzzzz')).be.rejectedWith(/there is no active daemon with id/)
     })
   })
 
   describe('when there is daemon instance running', () => {
-    let localPathToWorkerSocketDir
+    let localPathToSocketDir
     let childInfo
     let child
 
-    beforeEach(async function () {
-      this.timeout(0)
+    beforeEach(async () => {
+      await setup(dirName, ['jsreport-express'], undefined, {
+        httpPort: 9487
+      })
 
       console.log('spawning a daemon jsreport instance for the test suite..')
 
-      const localPathToSocketDir = path.join(pathToTempProject, `sock-dir-${nanoid(7)}`)
-      localPathToWorkerSocketDir = path.join(pathToTempProject, `workerSock-dir-${nanoid(7)}`)
+      const pathToTempProject = getTempDir(dirName)
 
-      utils.tryCreate(localPathToSocketDir)
-      utils.tryCreate(localPathToWorkerSocketDir)
+      localPathToSocketDir = createTempDir(`${dirName}/sock`)
+
+      const localPathToWorkerSocketDir = createTempDir(`${dirName}/sock/workerSock`)
+
+      // needed for launching instance that read deps from jsreport-cli/node_modules
+      process.env.cli_instance_lookup_fallback = 'enabled'
 
       const info = await keepAliveProcess({
         mainSockPath: localPathToSocketDir,
         workerSockPath: localPathToWorkerSocketDir,
         cwd: pathToTempProject
       })
+
+      delete process.env.cli_instance_lookup_fallback
+
       console.log('daemonized jsreport instance is ready..')
 
       childInfo = info
       child = info.proc
-    })
-
-    it('should kill by current working directory', async () => {
-      const result = await kill({
-        context: {
-          cwd: pathToTempProject,
-          workerSockPath: localPathToWorkerSocketDir,
-          daemonHandler
-        }
-      })
-      should(result).not.be.undefined()
-      should(result.pid).be.eql(childInfo.pid)
-    })
-
-    it('should kill by process id', async () => {
-      const result = await kill({
-        context: {
-          cwd: pathToTempProject,
-          workerSockPath: localPathToWorkerSocketDir,
-          daemonHandler
-        },
-        _: [null, childInfo.pid]
-      })
-
-      should(result).not.be.undefined()
-      should(result.pid).be.eql(childInfo.pid)
-    })
-
-    it('should kill by uid', async () => {
-      const result = await kill({
-        context: {
-          cwd: pathToTempProject,
-          workerSockPath: localPathToWorkerSocketDir,
-          daemonHandler
-        },
-        _: [null, childInfo.uid]
-      })
-      should(result).not.be.undefined()
-      should(result.uid).be.eql(childInfo.uid)
     })
 
     afterEach(() => {
@@ -166,13 +79,36 @@ describe('kill command', () => {
         child.kill()
       }
     })
-  })
 
-  after(function () {
-    // disabling timeout because removing files could take a
-    // couple of seconds
-    this.timeout(0)
+    it('should kill by current working directory', async () => {
+      const { stdout } = await exec(dirName, 'kill', {
+        env: {
+          cli_socketsDirectory: localPathToSocketDir
+        }
+      })
 
-    utils.cleanTempDir(['kill-project'])
+      should(stdout).containEql(`daemon process (pid: ${childInfo.pid}) killed successfully`)
+    })
+
+    it('should kill by process id', async () => {
+      const { stdout } = await exec(dirName, `kill ${childInfo.pid}`, {
+        env: {
+          cli_socketsDirectory: localPathToSocketDir
+        }
+      })
+
+      should(stdout).containEql(`daemon process (pid: ${childInfo.pid}) killed successfully`)
+    })
+
+    it('should kill by uid', async () => {
+      const { stdout } = await exec(dirName, `kill ${childInfo.uid}`, {
+        env: {
+          cli_socketsDirectory: localPathToSocketDir
+        }
+      })
+
+      should(stdout).containEql(`searching for daemon process with id: ${childInfo.uid}`)
+      should(stdout).containEql(`daemon process (pid: ${childInfo.pid}) killed successfully`)
+    })
   })
 })

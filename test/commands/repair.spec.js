@@ -1,181 +1,256 @@
 const path = require('path')
 const fs = require('fs')
 const should = require('should')
-const jsreportVersionToTest = require('../jsreportVersionToTest')
-const utils = require('../utils')
-const repair = require('../../lib/commands/repair').handler
 
-const TEMP_DIRS = [
-  'repair-empty',
-  'repair-with-specific-version',
-  'repair-packagejson-only',
-  'repair-packagejson-with-server',
-  'repair-packagejson-with-config'
-]
+const { getTempDir, createTempDir, setup, exec } = require('../../testUtils')({
+  cliModuleName: path.join(__dirname, '../../'),
+  baseDir: path.join(__dirname, '../temp'),
+  rootDirectory: path.join(__dirname, '../../'),
+  defaultExtensions: [
+    'jsreport-fs-store'
+  ],
+  defaultOpts: {
+    store: {
+      provider: 'fs'
+    }
+  },
+  deps: {
+    extend: require('node.extend.without.arrays'),
+    mkdirp: require('mkdirp'),
+    rimraf: require('rimraf'),
+    execa: require('execa')
+  }
+})
 
 describe('repair command', function () {
-  // disabling timeout because removing files could take a
-  // couple of seconds
-  this.timeout(0)
-
-  before(() => {
-    utils.cleanTempDir(TEMP_DIRS)
-
-    utils.createTempDir(TEMP_DIRS, (dir, absoluteDir) => {
-      switch (dir) {
-        case 'repair-packagejson-only':
-          fs.writeFileSync(
-            path.join(absoluteDir, './package.json'),
-            JSON.stringify({
-              name: 'packagejson-only',
-              dependencies: {
-                jsreport: jsreportVersionToTest
-              }
-            }, null, 2)
-          )
-          return
-
-        case 'repair-packagejson-with-server':
-          fs.writeFileSync(
-            path.join(absoluteDir, './package.json'),
-            JSON.stringify({
-              name: 'packagejson-with-server',
-              dependencies: {
-                jsreport: jsreportVersionToTest
-              }
-            }, null, 2)
-          )
-
-          fs.writeFileSync(
-            path.join(absoluteDir, './server.js'),
-            'require("jsreport")().init()'
-          )
-          return
-
-        case 'repair-packagejson-with-config':
-          fs.writeFileSync(
-            path.join(absoluteDir, './package.json'),
-            JSON.stringify({
-              name: 'config',
-              dependencies: {
-                jsreport: jsreportVersionToTest
-              }
-            }, null, 2)
-          )
-
-          fs.writeFileSync(
-            path.join(absoluteDir, './jsreport.config.json'),
-            '{"store": { "provider": "fs" }}'
-          )
-      }
-    })
-  })
-
   it('should work on empty directory', async function () {
-    // disabling timeout because npm install could take a
-    // couple of minutes
-    this.timeout(0)
+    const dirName = 'repair-empty'
 
-    const dir = utils.getTempDir('repair-empty')
+    const fullPathToTempProject = getTempDir(`${dirName}/project`)
 
-    const jsreportPackage = await repair({ context: { cwd: dir } })
+    await setup(dirName, [], getNpmInstallMock(fullPathToTempProject))
 
+    createTempDir(`${dirName}/project`)
+
+    const { stdout } = await exec(dirName, 'repair', {
+      cwd: fullPathToTempProject
+    })
+
+    should(stdout).containEql('installing jsreport latest version')
     // should install jsreport package
-    should(fs.existsSync(path.join(dir, 'node_modules/' + jsreportPackage.name))).be.eql(true)
+    should(fs.existsSync(path.join(fullPathToTempProject, 'node_modules/jsreport'))).be.eql(true)
     // and generate default files
-    should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-    should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
-    should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
+    should(fs.existsSync(path.join(fullPathToTempProject, 'server.js'))).be.eql(true)
+    should(fs.existsSync(path.join(fullPathToTempProject, 'jsreport.config.json'))).be.eql(true)
+    should(fs.existsSync(path.join(fullPathToTempProject, 'package.json'))).be.eql(true)
   })
 
   it('should work with specific jsreport version', async function () {
-    // disabling timeout because npm install could take a
-    // couple of minutes
-    this.timeout(0)
+    const dirName = 'repair-with-specific-version'
+    const fullPathToTempProject = getTempDir(`${dirName}/project`)
+    const versionToInstall = '2.5.0'
 
-    const dir = utils.getTempDir('repair-with-specific-version')
-    const versionToInstall = jsreportVersionToTest
+    await setup(dirName, [], getNpmInstallMock(fullPathToTempProject))
 
-    const jsreportPackage = await repair({ context: { cwd: dir }, _: [null, versionToInstall] })
+    createTempDir(`${dirName}/project`)
+
+    const { stdout } = await exec(dirName, `repair ${versionToInstall}`, {
+      cwd: fullPathToTempProject
+    })
+
+    should(stdout).containEql(`installing jsreport@${versionToInstall} version`)
 
     // should install jsreport package
-    should(fs.existsSync(path.join(dir, 'node_modules/' + jsreportPackage.name))).be.eql(true)
+    should(fs.existsSync(path.join(fullPathToTempProject, 'node_modules/jsreport'))).be.eql(true)
     // and generate default files
-    should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-    should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
-    should(fs.existsSync(path.join(dir, 'package.json'))).be.eql(true)
+    should(fs.existsSync(path.join(fullPathToTempProject, 'server.js'))).be.eql(true)
+    should(fs.existsSync(path.join(fullPathToTempProject, 'jsreport.config.json'))).be.eql(true)
+    should(fs.existsSync(path.join(fullPathToTempProject, 'package.json'))).be.eql(true)
 
     should(JSON.parse(
-      fs.readFileSync(path.join(dir, 'package.json')).toString()
-    ).dependencies.jsreport).not.be.undefined()
+      fs.readFileSync(path.join(fullPathToTempProject, 'package.json')).toString()
+    ).dependencies.jsreport).be.eql(versionToInstall)
   })
 
   it('should work on a directory that contains only package.json', async function () {
-    // disabling timeout because npm install could take a
-    // couple of minutes
-    this.timeout(0)
+    const dirName = 'repair-packagejson-only'
+    const fullPathToTempProject = getTempDir(`${dirName}/project`)
 
-    const dir = utils.getTempDir('repair-packagejson-only')
+    await setup(dirName, [], getNpmInstallMock(fullPathToTempProject))
 
-    await repair({ context: { cwd: dir } })
+    createTempDir(`${dirName}/project`)
+
+    fs.writeFileSync(
+      path.join(fullPathToTempProject, './package.json'),
+      JSON.stringify({
+        name: 'packagejson-only',
+        dependencies: {
+          jsreport: '*'
+        }
+      }, null, 2)
+    )
+
+    const { stdout } = await exec(dirName, `repair`, {
+      cwd: fullPathToTempProject
+    })
+
+    should(stdout).not.containEql('installing jsreport')
 
     // should generate default files
-    should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
-    should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
+    should(fs.existsSync(path.join(fullPathToTempProject, 'server.js'))).be.eql(true)
+    should(fs.existsSync(path.join(fullPathToTempProject, 'jsreport.config.json'))).be.eql(true)
     // and replace package.json in dir
     should(
       JSON.parse(
-        fs.readFileSync(path.join(dir, 'package.json')).toString()
+        fs.readFileSync(path.join(fullPathToTempProject, 'package.json')).toString()
       ).name
     ).be.eql('jsreport-server')
   })
 
   it('should override server.js file', async function () {
-    // disabling timeout because npm install could take a
-    // couple of minutes
-    this.timeout(0)
+    const dirName = 'repair-packagejson-with-server'
+    const fullPathToTempProject = getTempDir(`${dirName}/project`)
 
-    const dir = utils.getTempDir('repair-packagejson-with-server')
+    await setup(dirName, [], getNpmInstallMock(fullPathToTempProject))
 
-    await repair({ context: { cwd: dir } })
+    createTempDir(`${dirName}/project`)
+
+    fs.writeFileSync(
+      path.join(fullPathToTempProject, './package.json'),
+      JSON.stringify({
+        name: 'packagejson-with-server',
+        dependencies: {
+          jsreport: '*'
+        }
+      }, null, 2)
+    )
+
+    fs.writeFileSync(
+      path.join(fullPathToTempProject, './server.js'),
+      'require("jsreport")().init()'
+    )
+
+    const { stdout } = await exec(dirName, `repair`, {
+      cwd: fullPathToTempProject
+    })
+
+    should(stdout).not.containEql('installing jsreport')
 
     // should generate default files
-    should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
+    should(fs.existsSync(path.join(fullPathToTempProject, 'jsreport.config.json'))).be.eql(true)
+
     // replace package.json in dir
     should(
       JSON.parse(
-        fs.readFileSync(path.join(dir, 'package.json')).toString()
+        fs.readFileSync(path.join(fullPathToTempProject, 'package.json')).toString()
       ).name
     ).be.eql('jsreport-server')
+
     // and replace server.js
     should(
-      fs.readFileSync(path.join(dir, 'server.js')).toString().trim()
+      fs.readFileSync(path.join(fullPathToTempProject, 'server.js')).toString().trim()
     ).be.not.eql('require("jsreport")().init()')
   })
 
   it('should override jsreport.config.json file', async function () {
-    // disabling timeout because npm install could take a
-    // couple of minutes
-    this.timeout(0)
+    const dirName = 'repair-packagejson-with-config'
+    const fullPathToTempProject = getTempDir(`${dirName}/project`)
 
-    const dir = utils.getTempDir('repair-packagejson-with-config')
+    await setup(dirName, [], getNpmInstallMock(fullPathToTempProject))
 
-    await repair({ context: { cwd: dir } })
+    createTempDir(`${dirName}/project`)
+
+    fs.writeFileSync(
+      path.join(fullPathToTempProject, './package.json'),
+      JSON.stringify({
+        name: 'config',
+        dependencies: {
+          jsreport: '*'
+        }
+      }, null, 2)
+    )
+
+    fs.writeFileSync(
+      path.join(fullPathToTempProject, './jsreport.config.json'),
+      '{"store": { "provider": "fs" }}'
+    )
+
+    const { stdout } = await exec(dirName, `repair`, {
+      cwd: fullPathToTempProject
+    })
+
+    should(stdout).not.containEql('installing jsreport')
 
     // should generate default files
-    should(fs.existsSync(path.join(dir, 'jsreport.config.json'))).be.eql(true)
-    should(fs.existsSync(path.join(dir, 'server.js'))).be.eql(true)
+    should(fs.existsSync(path.join(fullPathToTempProject, 'jsreport.config.json'))).be.eql(true)
+    should(fs.existsSync(path.join(fullPathToTempProject, 'server.js'))).be.eql(true)
     // replace package.json in dir
     should(
       JSON.parse(
-        fs.readFileSync(path.join(dir, 'package.json')).toString()
+        fs.readFileSync(path.join(fullPathToTempProject, 'package.json')).toString()
       ).name
     ).be.eql('jsreport-server')
     // and replace jsreport.config.json
     should(
-      fs.readFileSync(path.join(dir, 'jsreport.config.json')).toString().trim()
+      fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString().trim()
     ).be.not.eql('{"store": { "provider": "fs" }}')
   })
-
-  after(() => utils.cleanTempDir(TEMP_DIRS))
 })
+
+function getNpmInstallMock (tempProject) {
+  return `
+    const path = require('path')
+    const fs = require('fs')
+
+    commander.on('command.repair.init', (argv) => {
+      argv.context.customInstall = (pkgName, opts, cb) => {
+        const parsed = pkgName.split('@')
+        const pkg = parsed[0]
+        const pkgVersion = parsed[1]
+
+        try {
+          fs.mkdirSync(path.join('${tempProject}', 'node_modules'))
+        } catch (e) {
+          return cb(e)
+        }
+
+        const jsreportPath = path.join('${tempProject}', 'node_modules', pkg)
+
+        try {
+          fs.mkdirSync(jsreportPath)
+        } catch (e) {
+          return cb(e)
+        }
+
+        const version = pkgVersion != null ? pkgVersion : '2.4.0'
+
+        try {
+          if (!fs.existsSync(path.join(jsreportPath, 'package.json'))) {
+            fs.writeFileSync(path.join(jsreportPath, 'package.json'), JSON.stringify({
+              name: pkg,
+              version
+            }, null, 2))
+          }
+
+          if (fs.existsSync(path.join('${tempProject}', 'package.json'))) {
+            const projectPkg = JSON.parse(fs.readFileSync(path.join('${tempProject}', 'package.json')).toString())
+
+            if (!projectPkg.dependencies) {
+              projectPkg.dependencies = {}
+            }
+
+            if (!projectPkg.dependencies[pkg]) {
+              projectPkg.dependencies[pkg] = version
+            }
+
+            fs.writeFileSync(path.join('${tempProject}', 'package.json'), JSON.stringify(projectPkg, null, 2))
+          }
+
+          cb()
+        } catch (e) {
+          cb(e)
+        }
+      }
+    })
+  `
+}

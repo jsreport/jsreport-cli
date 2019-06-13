@@ -1,9 +1,10 @@
 const should = require('should')
+const path = require('path')
+const fs = require('fs')
 const stdMocks = require('std-mocks')
-const utils = require('./utils')
 const commander = require('../lib/commander')
 const pkg = require('../package.json')
-const exitMock = utils.mockProcessExit
+const exitMock = require('./utils/mockProcessExit')
 
 describe('commander', () => {
   describe('when initializing', () => {
@@ -857,6 +858,202 @@ describe('commander', () => {
       })
 
       stdMocks.use()
+      exitMock.enable()
+
+      cli.start(['test'])
+    })
+  })
+
+  describe('when using jsreport instances', () => {
+    const dirName = 'commander-project'
+
+    const { getTempDir, setup } = require('../testUtils')({
+      cliModuleName: path.join(__dirname, '../'),
+      baseDir: path.join(__dirname, './temp'),
+      rootDirectory: path.join(__dirname, '../'),
+      defaultExtensions: [
+        'jsreport-fs-store'
+      ],
+      defaultOpts: {
+        store: {
+          provider: 'fs'
+        }
+      },
+      deps: {
+        extend: require('node.extend.without.arrays'),
+        mkdirp: require('mkdirp'),
+        rimraf: require('rimraf'),
+        execa: require('execa')
+      }
+    })
+
+    beforeEach(async () => {
+      const fullDir = getTempDir(dirName)
+
+      try {
+        // deleting cache of package.json to allow run the tests on the same project
+        delete require.cache[require.resolve(path.join(fullDir, './package.json'))]
+      } catch (e) {}
+
+      await setup(dirName)
+
+      // needed because on these tests we don't execute the cli directly,
+      // the tests use the commander API
+      process.env.cli_instance_lookup_fallback = 'enabled'
+    })
+
+    afterEach(() => {
+      delete process.env.cli_instance_lookup_fallback
+    })
+
+    it('should emit event on instance searching', (done) => {
+      const fullDir = getTempDir(dirName)
+      const cli = commander(fullDir)
+
+      let instanceLookupCalled = false
+      let instanceFoundCalled = false
+      let instanceInEvent
+      let instanceInHandler
+
+      const testCommand = {
+        command: 'test',
+        description: 'test command desc',
+        handler: async (argv) => {
+          instanceInHandler = await argv.context.getInstance()
+          return instanceInHandler
+        }
+      }
+
+      cli.registerCommand(testCommand)
+
+      cli.on('instance.lookup', () => (instanceLookupCalled = true))
+
+      cli.on('instance.found', (instance) => {
+        instanceFoundCalled = true
+        instanceInEvent = instance
+      })
+
+      cli.on('command.success', (cmdName, result) => {
+        setTimeout(() => {
+          let exitCode
+
+          exitMock.restore()
+
+          exitCode = exitMock.callInfo().exitCode
+
+          should(cmdName).be.eql('test')
+          should(exitCode).be.eql(0)
+          should(instanceLookupCalled).be.eql(true)
+          should(instanceFoundCalled).be.eql(true)
+          should(instanceInHandler).be.exactly(instanceInEvent)
+          should(result).be.exactly(instanceInHandler)
+
+          if (instanceInHandler.express && instanceInHandler.express.server) {
+            instanceInHandler.express.server.close()
+          }
+
+          done()
+        }, 200)
+      })
+
+      exitMock.enable()
+
+      cli.start(['test'])
+    })
+
+    it('should emit event when using a default instance', function (done) {
+      const fullDir = getTempDir(dirName)
+      const cli = commander(fullDir)
+      let instanceLookupCalled = false
+      let instanceDefaultCalled = false
+      let instanceInEvent
+      let instanceInHandler
+
+      const pkg = JSON.parse(fs.readFileSync(path.join(fullDir, 'package.json')).toString())
+
+      delete pkg.jsreport
+
+      fs.writeFileSync(path.join(fullDir, 'package.json'), JSON.stringify(pkg, null, 2))
+      fs.unlinkSync(path.join(fullDir, 'server.js'))
+
+      const testCommand = {
+        command: 'test',
+        description: 'test command desc',
+        handler: async (argv) => {
+          instanceInHandler = await argv.context.getInstance()
+          return instanceInHandler
+        }
+      }
+
+      cli.registerCommand(testCommand)
+
+      cli.on('instance.lookup', () => (instanceLookupCalled = true))
+
+      cli.on('instance.default', (instance) => {
+        instanceDefaultCalled = true
+        instanceInEvent = instance
+      })
+
+      cli.on('command.success', (cmdName, result) => {
+        setTimeout(() => {
+          let exitCode
+
+          exitMock.restore()
+
+          exitCode = exitMock.callInfo().exitCode
+
+          should(cmdName).be.eql('test')
+          should(exitCode).be.eql(0)
+          should(instanceLookupCalled).be.eql(true)
+          should(instanceDefaultCalled).be.eql(true)
+          should(instanceInHandler).be.exactly(instanceInEvent)
+          should(result).be.exactly(instanceInHandler)
+
+          done()
+        }, 200)
+      })
+
+      exitMock.enable()
+
+      cli.start(['test'])
+    })
+
+    it('should emit event on instance initialization', (done) => {
+      const fullDir = getTempDir(dirName)
+      const cli = commander(fullDir)
+      let instanceInitializingCalled = false
+      let instanceInHandler
+
+      const testCommand = {
+        command: 'test',
+        description: 'test command desc',
+        handler: async (argv) => {
+          instanceInHandler = await argv.context.getInstance()
+          await argv.context.initInstance(instanceInHandler)
+          return instanceInHandler
+        }
+      }
+
+      cli.registerCommand(testCommand)
+
+      cli.on('instance.initializing', () => (instanceInitializingCalled = true))
+
+      cli.on('instance.initialized', (result) => {
+        setTimeout(() => {
+          let exitCode
+
+          exitMock.restore()
+
+          exitCode = exitMock.callInfo().exitCode
+
+          should(exitCode).be.eql(0)
+          should(instanceInitializingCalled).be.eql(true)
+          should(result).be.exactly(instanceInHandler)
+
+          done()
+        }, 200)
+      })
+
       exitMock.enable()
 
       cli.start(['test'])

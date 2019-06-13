@@ -2,6 +2,8 @@
 
 const commander = require('./lib/commander')
 const main = require('./lib/cliExtension')
+const keepAliveProcess = require('./lib/keepAliveProcess')
+const daemonHandler = require('./lib/daemonHandler')
 const config = require('./jsreport.config')
 
 module.exports = function (options) {
@@ -15,3 +17,5 @@ module.exports = function (options) {
 }
 
 module.exports.commander = commander
+module.exports.keepAliveProcess = keepAliveProcess
+module.exports.daemonHandler = daemonHandler
