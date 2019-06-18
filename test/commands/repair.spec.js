@@ -209,12 +209,12 @@ function getNpmInstallMock (tempProject) {
         const pkgVersion = parsed[1]
 
         try {
-          fs.mkdirSync(path.join('${tempProject}', 'node_modules'))
+          fs.mkdirSync(path.join(\`${escapePath(tempProject)}\`, 'node_modules'))
         } catch (e) {
           return cb(e)
         }
 
-        const jsreportPath = path.join('${tempProject}', 'node_modules', pkg)
+        const jsreportPath = path.join(\`${escapePath(tempProject)}\`, 'node_modules', pkg)
 
         try {
           fs.mkdirSync(jsreportPath)
@@ -232,8 +232,8 @@ function getNpmInstallMock (tempProject) {
             }, null, 2))
           }
 
-          if (fs.existsSync(path.join('${tempProject}', 'package.json'))) {
-            const projectPkg = JSON.parse(fs.readFileSync(path.join('${tempProject}', 'package.json')).toString())
+          if (fs.existsSync(path.join(\`${escapePath(tempProject)}\`, 'package.json'))) {
+            const projectPkg = JSON.parse(fs.readFileSync(path.join(\`${escapePath(tempProject)}\`, 'package.json')).toString())
 
             if (!projectPkg.dependencies) {
               projectPkg.dependencies = {}
@@ -243,7 +243,7 @@ function getNpmInstallMock (tempProject) {
               projectPkg.dependencies[pkg] = version
             }
 
-            fs.writeFileSync(path.join('${tempProject}', 'package.json'), JSON.stringify(projectPkg, null, 2))
+            fs.writeFileSync(path.join(\`${escapePath(tempProject)}\`, 'package.json'), JSON.stringify(projectPkg, null, 2))
           }
 
           cb()
@@ -253,4 +253,8 @@ function getNpmInstallMock (tempProject) {
       }
     })
   `
+}
+
+function escapePath (pathStr) {
+  return pathStr.replace(/\\/g, '\\\\')
 }

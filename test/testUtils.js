@@ -160,10 +160,11 @@ module.exports = ({
     const defaultCWD = getTempDir(baseDir, dir)
     const cliRunner = path.join(defaultCWD, 'cliRunner.js')
 
-    const fullCmd = `${process.execPath} ${process.env.debugCLI ? ' --inspect-brk' : ''} ${cliRunner} ${cmd}`
+    const file = process.execPath
+    const fullCmd = `${process.env.debugCLI ? '--inspect-brk ' : ''}${cliRunner} ${cmd}`
 
     // this should be replaced when execa.command (v2) is released
-    const [file, ...args] = (
+    const args = (
       fullCmd
         .trim()
         .split(/ +/g)
