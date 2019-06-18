@@ -38,7 +38,7 @@
     "studio",
     "index.js",
     "cli.js",
-    "testUtils.js",
+    "test/testUtils.js",
     "example.server.js",
     "example.config.json",
     "jsreport.config.js"

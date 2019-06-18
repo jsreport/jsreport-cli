@@ -5,7 +5,7 @@ const should = require('should')
 
 const IS_WINDOWS = process.platform === 'win32'
 
-const { getTempDir, createTempDir, setup, exec } = require('../../testUtils')({
+const { getTempDir, createTempDir, setup, exec } = require('../testUtils')({
   cliModuleName: path.join(__dirname, '../../'),
   baseDir: path.join(__dirname, '../temp'),
   rootDirectory: path.join(__dirname, '../../'),

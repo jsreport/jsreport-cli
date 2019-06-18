@@ -867,7 +867,7 @@ describe('commander', () => {
   describe('when using jsreport instances', () => {
     const dirName = 'commander-project'
 
-    const { getTempDir, setup } = require('../testUtils')({
+    const { getTempDir, setup } = require('./testUtils')({
       cliModuleName: path.join(__dirname, '../'),
       baseDir: path.join(__dirname, './temp'),
       rootDirectory: path.join(__dirname, '../'),

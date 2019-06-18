@@ -2,7 +2,7 @@ const path = require('path')
 const fs = require('fs')
 const should = require('should')
 
-const { getTempDir, createTempDir, setup, exec } = require('../../testUtils')({
+const { getTempDir, createTempDir, setup, exec } = require('../testUtils')({
   cliModuleName: path.join(__dirname, '../../'),
   baseDir: path.join(__dirname, '../temp'),
   rootDirectory: path.join(__dirname, '../../'),

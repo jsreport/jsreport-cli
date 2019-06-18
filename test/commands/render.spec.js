@@ -4,7 +4,7 @@ const should = require('should')
 const nanoid = require('nanoid')
 const daemonHandler = require('../../lib/daemonHandler')
 
-const { getTempDir, createTempDir, setup, init, exec } = require('../../testUtils')({
+const { getTempDir, createTempDir, setup, init, exec } = require('../testUtils')({
   cliModuleName: path.join(__dirname, '../../'),
   baseDir: path.join(__dirname, '../temp'),
   rootDirectory: path.join(__dirname, '../../'),

@@ -1,7 +1,7 @@
 const path = require('path')
 const should = require('should')
 
-const { setup, exec } = require('../testUtils')({
+const { setup, exec } = require('./testUtils')({
   cliModuleName: path.join(__dirname, '../'),
   baseDir: path.join(__dirname, './temp'),
   rootDirectory: path.join(__dirname, '../'),
