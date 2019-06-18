@@ -106,6 +106,20 @@ describe('win-uninstall command', function () {
       return
     }
 
+    console.log(`ensuring windows service "${serviceName}" doest not exists first..`)
+
+    await new Promise((resolve, reject) => {
+      childProcess.exec(`sc stop "${serviceName}"`, {
+        cwd: fullPathToTempProject
+      }, () => {
+        childProcess.exec(`sc delete "${serviceName}"`, {
+          cwd: fullPathToTempProject
+        }, function () {
+          resolve()
+        })
+      })
+    })
+
     console.log('installing app in', fullPathToTempProject, 'as windows service for the test case..')
 
     const winser = Winser()

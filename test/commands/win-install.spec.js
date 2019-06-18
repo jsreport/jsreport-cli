@@ -130,6 +130,22 @@ describe('win-install command', function () {
       'setInterval(() => {}, 2000)'
     )
 
+    if (IS_WINDOWS) {
+      console.log(`ensuring windows service "${serviceName}" doest not exists first..`)
+
+      await new Promise((resolve, reject) => {
+        childProcess.exec(`sc stop "${serviceName}"`, {
+          cwd: fullPathToTempProject
+        }, () => {
+          childProcess.exec(`sc delete "${serviceName}"`, {
+            cwd: fullPathToTempProject
+          }, function () {
+            resolve()
+          })
+        })
+      })
+    }
+
     const installPromise = exec(dirName, 'win-install', {
       cwd: fullPathToTempProject
     })
@@ -138,6 +154,8 @@ describe('win-install command', function () {
       const { stdout } = await installPromise
 
       return should(stdout).containEql('only works on windows platforms')
+    } else {
+      await installPromise
     }
 
     const serviceStdout = await new Promise((resolve, reject) => {
