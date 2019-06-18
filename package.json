@@ -8,8 +8,8 @@
   },
   "scripts": {
     "start": "cross-env JSREPORT_CLI_DEV=enabled node cli.js",
-    "test": "mocha --recursive \"./test/*.spec.js\" \"./test/commands/**/*.spec.js\" --timeout 20000 --exit",
-    "test:watch": "mocha --recursive \"./test/*.spec.js\" \"./test/commands/**/*.spec.js\" --timeout 20000 --exit --watch",
+    "test": "mocha --recursive \"./test/*.spec.js\" \"./test/commands/**/*.spec.js\" --timeout 28000 --exit",
+    "test:watch": "mocha --recursive \"./test/*.spec.js\" \"./test/commands/**/*.spec.js\" --timeout 28000 --exit --watch",
     "prepublish": "in-publish && standard || not-in-publish"
   },
   "homepage": "https://github.com/jsreport/jsreport-cli",

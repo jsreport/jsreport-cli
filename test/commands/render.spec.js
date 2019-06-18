@@ -84,6 +84,8 @@ describe('render command', () => {
       if (proc) {
         await daemonHandler.kill(proc)
       }
+
+      await new Promise((resolve) => setTimeout(resolve, 500))
     })
 
     it('should render normally and next calls to render should use the same daemon process', async function () {
