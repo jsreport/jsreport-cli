@@ -99,9 +99,9 @@ module.exports = ({
         module.exports = (initOpts) => {
           return (
             require('jsreport-core')(initOpts != null ? initOpts : defaultOpts)
-              .use(require(\`${cliModuleName}\`)())
-              ${defaultExtensions && defaultExtensions.length > 0 ? defaultExtensions.map((e) => `.use(require(\`${e}\`)())`).join('') : ''}
-              ${extensions && extensions.length > 0 ? extensions.map((e) => `.use(require(\`${e}\`)())`).join('') : ''}
+              .use(require(\`${escapePath(cliModuleName)}\`)())
+              ${defaultExtensions && defaultExtensions.length > 0 ? defaultExtensions.map((e) => `.use(require(\`${escapePath(e)}\`)())`).join('') : ''}
+              ${extensions && extensions.length > 0 ? extensions.map((e) => `.use(require(\`${escapePath(e)}\`)())`).join('') : ''}
           )
         }
 
@@ -131,7 +131,7 @@ module.exports = ({
       `
       const createJsreport = require('./instance')
 
-      const commander = require(\`${cliModuleName}\`).commander(undefined, {
+      const commander = require(\`${escapePath(cliModuleName)}\`).commander(undefined, {
         instance: process.env.noDefaultInstance != null ? undefined : createJsreport()
       })
 
@@ -188,4 +188,8 @@ module.exports = ({
       windowsHide: true
     })
   }
+}
+
+function escapePath (pathStr) {
+  return pathStr.replace(/\\/g, '\\\\')
 }
