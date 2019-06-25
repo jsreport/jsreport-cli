@@ -66,6 +66,7 @@
     "once": "1.4.0",
     "prompt-tmp": "1.0.0",
     "semver": "5.6.0",
+    "silent-spawn": "0.4.0",
     "yargs": "13.2.4"
   },
   "devDependencies": {
