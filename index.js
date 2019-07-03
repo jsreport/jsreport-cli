@@ -17,5 +17,6 @@ module.exports = function (options) {
 }
 
 module.exports.commander = commander
+module.exports.tempResources = main.tempResources
 module.exports.keepAliveProcess = keepAliveProcess
 module.exports.daemonHandler = daemonHandler
