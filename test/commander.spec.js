@@ -477,101 +477,55 @@ describe('commander', () => {
   })
 
   describe('when starting', () => {
-    it('should fail on invalid arguments', () => {
+    it('should fail on invalid arguments', async () => {
       const cli = commander()
 
-      should(function startCommander () {
-        cli.start()
-      }).throw()
+      const result = await cli.startAndWait()
 
-      should(function startCommander () {
-        cli.start(null)
-      }).throw()
+      should(result.error).be.ok()
+
+      const result2 = await cli.startAndWait(null)
+      should(result2.error).be.ok()
     })
 
-    it('should print help by default when command is not present', (done) => {
+    it('should print help by default when command is not present', async () => {
       const cli = commander()
       let helpPrinted = false
 
-      stdMocks.use()
+      const result = await cli.startAndWait([])
+      helpPrinted = result.logs.find((l) => l.message.indexOf('Commands:') !== -1) != null
 
-      cli.on('parsed', () => {
-        process.nextTick(() => {
-          stdMocks.restore()
-          helpPrinted = stdMocks.flush().stderr.join('\n').indexOf('Commands:') !== -1
-          should(helpPrinted).be.eql(true)
-          done()
-        })
-      })
-
-      cli.start([])
+      should(helpPrinted).be.eql(true)
     })
 
-    it('should not print help when using `showHelpWhenNoCommand` option and command is not present', (done) => {
+    it('should not print help when using `showHelpWhenNoCommand` option and command is not present', async () => {
       const cli = commander(process.cwd(), {
         showHelpWhenNoCommand: false
       })
 
-      let output
+      const result = await cli.startAndWait([])
 
-      stdMocks.use()
-
-      cli.on('parsed', () => {
-        process.nextTick(() => {
-          stdMocks.restore()
-          output = stdMocks.flush()
-
-          should(output.stdout.length).be.eql(0)
-          should(output.stderr.length).be.eql(0)
-          done()
-        })
-      })
-
-      cli.start([])
+      should(result.logs.length).be.eql(0)
     })
 
-    it('should handle --help option by default', (done) => {
+    it('should handle --help option by default', async () => {
       const cli = commander()
       let helpPrinted = false
 
-      stdMocks.use()
-      exitMock.enable()
+      const result = await cli.startAndWait(['--help'])
 
-      cli.on('parsed', () => {
-        process.nextTick(() => {
-          stdMocks.restore()
-          exitMock.restore()
+      helpPrinted = result.logs.find((l) => l.message.indexOf('Commands:') !== -1) != null
 
-          helpPrinted = stdMocks.flush().stdout.join('\n').indexOf('Commands:') !== -1
-
-          should(helpPrinted).be.eql(true)
-          done()
-        })
-      })
-
-      cli.start(['--help'])
+      should(helpPrinted).be.eql(true)
     })
 
-    it('should handle --version option by default', (done) => {
+    it('should handle --version option by default', async () => {
       const cli = commander()
-      let versionPrinted
 
-      stdMocks.use()
-      exitMock.enable()
+      const result = await cli.startAndWait(['--version'])
+      const versionPrinted = result.logs[0].message
 
-      cli.on('parsed', () => {
-        process.nextTick(() => {
-          stdMocks.restore()
-          exitMock.restore()
-
-          versionPrinted = stdMocks.flush().stdout[0]
-
-          should(versionPrinted.indexOf(pkg.version) !== -1).be.eql(true)
-          done()
-        })
-      })
-
-      cli.start(['--version'])
+      should(should(versionPrinted.indexOf(pkg.version) !== -1).be.eql(true))
     })
 
     it('should emit start events', (done) => {
@@ -583,19 +537,12 @@ describe('commander', () => {
       cli.on('started', () => (startedCalled = true))
 
       cli.on('parsed', () => {
-        process.nextTick(() => {
-          stdMocks.restore()
-          stdMocks.flush()
-
-          should(startingCalled).be.eql(true)
-          should(startedCalled).be.eql(true)
-          done()
-        })
+        should(startingCalled).be.eql(true)
+        should(startedCalled).be.eql(true)
+        done()
       })
 
-      stdMocks.use()
-
-      cli.start([])
+      cli.startAndWait([])
     })
 
     it('should emit parse events', (done) => {
@@ -610,20 +557,12 @@ describe('commander', () => {
       })
 
       cli.on('parsed', () => {
-        process.nextTick(() => {
-          stdMocks.restore()
-          stdMocks.flush()
-          exitMock.restore()
-          should(argsInEvent).be.eql(cliArgs)
-          should(contextInEvent).be.not.undefined()
-          done()
-        })
+        should(argsInEvent).be.eql(cliArgs)
+        should(contextInEvent).be.not.undefined()
+        done()
       })
 
-      stdMocks.use()
-      exitMock.enable()
-
-      cli.start(cliArgs)
+      cli.startAndWait(cliArgs)
     })
 
     it('should exit on invalid command', (done) => {
@@ -632,8 +571,6 @@ describe('commander', () => {
 
       cli.on('started', (err) => {
         process.nextTick(() => {
-          stdMocks.restore()
-          stdMocks.flush()
           exitMock.restore()
 
           const exitCode = exitMock.callInfo().exitCode
@@ -644,7 +581,6 @@ describe('commander', () => {
         })
       })
 
-      stdMocks.use()
       exitMock.enable()
 
       cli.start(cliArgs)
@@ -656,8 +592,6 @@ describe('commander', () => {
 
       cli.on('parsed', (err) => {
         process.nextTick(() => {
-          stdMocks.restore()
-          stdMocks.flush()
           exitMock.restore()
 
           const exitCode = exitMock.callInfo().exitCode
@@ -668,7 +602,6 @@ describe('commander', () => {
         })
       })
 
-      stdMocks.use()
       exitMock.enable()
 
       cli.start(cliArgs)
@@ -689,32 +622,17 @@ describe('commander', () => {
 
       cli.on('started', (err) => {
         if (err) {
-          stdMocks.restore()
-          stdMocks.flush()
-          exitMock.restore()
           return done(err)
         }
       })
 
       cli.on('command.error', (cmdName, err) => {
-        setTimeout(() => {
-          stdMocks.restore()
-          stdMocks.flush()
-          exitMock.restore()
-
-          const exitCode = exitMock.callInfo().exitCode
-
-          should(cmdName).be.eql('test')
-          should(err).be.Error()
-          should(exitCode).be.eql(1)
-          done()
-        }, 200)
+        should(cmdName).be.eql('test')
+        should(err).be.Error()
+        done()
       })
 
-      stdMocks.use()
-      exitMock.enable()
-
-      cli.start(['test'])
+      cli.startAndWait(['test']).then(() => {}).catch(() => {})
     })
 
     it('should handle a failing async command', (done) => {
@@ -732,8 +650,6 @@ describe('commander', () => {
 
       cli.on('command.error', (cmdName, err) => {
         setTimeout(() => {
-          stdMocks.restore()
-          stdMocks.flush()
           exitMock.restore()
 
           const exitCode = exitMock.callInfo().exitCode
@@ -745,7 +661,6 @@ describe('commander', () => {
         }, 200)
       })
 
-      stdMocks.use()
       exitMock.enable()
 
       cli.start(['test'])

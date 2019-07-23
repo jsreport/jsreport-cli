@@ -31,15 +31,17 @@ describe('start command', () => {
   it('should handle errors', async () => {
     const fullPathToTempProject = createTempDir(`${dirName}/project`)
 
-    const { stderr } = await exec(dirName, 'start', {
-      env: {
-        cli_instance_lookup_fallback: false,
-        noDefaultInstance: true
-      },
-      cwd: fullPathToTempProject
-    })
-
-    should(stderr).containEql(`Couldn't find a jsreport installation`)
+    try {
+      await exec(dirName, 'start', {
+        env: {
+          cli_instance_lookup_fallback: false,
+          noDefaultInstance: true
+        },
+        cwd: fullPathToTempProject
+      })
+    } catch (e) {
+      should(e.stderr).containEql(`Couldn't find a jsreport installation`)
+    }
   })
 
   it('should start a jsreport instance', async () => {
