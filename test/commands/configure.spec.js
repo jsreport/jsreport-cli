@@ -28,6 +28,7 @@ describe('configure command', () => {
   it('should just print configuration', async () => {
     const answers = {
       env: 'dev',
+      secretKey: 'demo123456789012',
       serverEnabled: false,
       store: 'memory',
       allowLocalFilesAccess: false,
@@ -55,6 +56,9 @@ describe('configure command', () => {
       logger: {
         console: { transport: 'console', level: 'debug' }
       },
+      encryption: {
+        secretKey: answers.secretKey
+      },
       extensions: {
         express: {
           enabled: false
@@ -75,6 +79,7 @@ describe('configure command', () => {
   it('should generate simple configuration', async () => {
     const answers = {
       env: 'dev',
+      secretKey: 'demo123456789012',
       serverEnabled: false,
       store: 'memory',
       allowLocalFilesAccess: false,
@@ -102,6 +107,9 @@ describe('configure command', () => {
       logger: {
         console: { transport: 'console', level: 'debug' }
       },
+      encryption: {
+        secretKey: answers.secretKey
+      },
       extensions: {
         express: {
           enabled: false
@@ -127,6 +135,7 @@ describe('configure command', () => {
   it('should generate configuration with web server enabled', async () => {
     const answers = {
       env: 'dev',
+      secretKey: 'demo123456789012',
       serverEnabled: true,
       serverProtocol: 'http',
       serverPort: 7500,
@@ -153,9 +162,12 @@ describe('configure command', () => {
     const expectedConfig = {
       httpPort: 7500,
       allowLocalFilesAccess: true,
+      encryption: {
+        secretKey: answers.secretKey
+      },
       extensions: {
         authentication: {
-          cookieSession: { secret: 'secret here' },
+          cookieSession: {},
           admin: { username: 'test', password: 'test-pass' },
           enabled: true
         },
