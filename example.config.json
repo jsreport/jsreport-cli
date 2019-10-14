@@ -7,6 +7,9 @@
     "blobStorage": {
         "provider": "fs"
     },
+    "encryption": {
+        "secretKey": null
+    },
     "templatingEngines": {
         "timeout": 10000
     },
@@ -15,9 +18,7 @@
     },
     "extensions": {
         "authentication" : {
-            "cookieSession": {
-                "secret": "<your strong secret>"
-            },
+            "cookieSession": {},
             "admin": {
                 "username" : "admin",
                 "password": "password"

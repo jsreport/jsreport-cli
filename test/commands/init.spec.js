@@ -43,6 +43,10 @@ describe('init command', function () {
     should(fs.existsSync(path.join(fullPathToTempProject, 'server.js'))).be.eql(true)
     should(fs.existsSync(path.join(fullPathToTempProject, 'jsreport.config.json'))).be.eql(true)
     should(fs.existsSync(path.join(fullPathToTempProject, 'package.json'))).be.eql(true)
+
+    const conf = JSON.parse(fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString())
+
+    should(conf.encryption.secretKey).be.String()
   })
 
   it('should initialize with a specific jsreport version', async function () {
@@ -70,6 +74,10 @@ describe('init command', function () {
     should(JSON.parse(
       fs.readFileSync(path.join(fullPathToTempProject, 'package.json')).toString()
     ).dependencies.jsreport).be.eql(versionToInstall)
+
+    const conf = JSON.parse(fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString())
+
+    should(conf.encryption.secretKey).be.String()
   })
 
   it('should initialize a directory that contains only package.json', async function () {
@@ -105,6 +113,10 @@ describe('init command', function () {
         fs.readFileSync(path.join(fullPathToTempProject, 'package.json')).toString()
       ).name
     ).be.eql('packagejson-only')
+
+    const conf = JSON.parse(fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString())
+
+    should(conf.encryption.secretKey).be.String()
   })
 
   it('should not override server.js file', async function () {

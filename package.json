@@ -78,7 +78,7 @@
     "handlebars": "4.4.3",
     "in-publish": "2.0.0",
     "jsreport-authentication": "2.3.0",
-    "jsreport-core": "2.6.2",
+    "jsreport-core": "github:jsreport/jsreport-core#encryption",
     "jsreport-express": "2.5.0",
     "jsreport-fs-store": "2.6.0",
     "jsreport-handlebars": "2.1.0",

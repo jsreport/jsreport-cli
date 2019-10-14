@@ -43,6 +43,10 @@ describe('repair command', function () {
     should(fs.existsSync(path.join(fullPathToTempProject, 'server.js'))).be.eql(true)
     should(fs.existsSync(path.join(fullPathToTempProject, 'jsreport.config.json'))).be.eql(true)
     should(fs.existsSync(path.join(fullPathToTempProject, 'package.json'))).be.eql(true)
+
+    const conf = JSON.parse(fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString())
+
+    should(conf.encryption.secretKey).be.String()
   })
 
   it('should work with specific jsreport version', async function () {
@@ -70,6 +74,10 @@ describe('repair command', function () {
     should(JSON.parse(
       fs.readFileSync(path.join(fullPathToTempProject, 'package.json')).toString()
     ).dependencies.jsreport).be.eql(versionToInstall)
+
+    const conf = JSON.parse(fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString())
+
+    should(conf.encryption.secretKey).be.String()
   })
 
   it('should work on a directory that contains only package.json', async function () {
@@ -105,6 +113,10 @@ describe('repair command', function () {
         fs.readFileSync(path.join(fullPathToTempProject, 'package.json')).toString()
       ).name
     ).be.eql('jsreport-server')
+
+    const conf = JSON.parse(fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString())
+
+    should(conf.encryption.secretKey).be.String()
   })
 
   it('should override server.js file', async function () {
@@ -146,6 +158,10 @@ describe('repair command', function () {
       ).name
     ).be.eql('jsreport-server')
 
+    const conf = JSON.parse(fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString())
+
+    should(conf.encryption.secretKey).be.String()
+
     // and replace server.js
     should(
       fs.readFileSync(path.join(fullPathToTempProject, 'server.js')).toString().trim()
@@ -155,6 +171,7 @@ describe('repair command', function () {
   it('should override jsreport.config.json file', async function () {
     const dirName = 'repair-packagejson-with-config'
     const fullPathToTempProject = getTempDir(`${dirName}/project`)
+    const sampleSecretKey = 'foo1234567891234'
 
     await setup(dirName, [], getNpmInstallMock(fullPathToTempProject))
 
@@ -172,7 +189,7 @@ describe('repair command', function () {
 
     fs.writeFileSync(
       path.join(fullPathToTempProject, './jsreport.config.json'),
-      '{"store": { "provider": "fs" }}'
+      '{"store": { "provider": "fs" }, "encryption": { "secretKey": "' + sampleSecretKey + '" }}'
     )
 
     const { stdout } = await exec(dirName, `repair`, {
@@ -191,9 +208,14 @@ describe('repair command', function () {
       ).name
     ).be.eql('jsreport-server')
     // and replace jsreport.config.json
+    const conf = JSON.parse(fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString())
+
+    should(conf.encryption.secretKey).be.String()
+    should(conf.encryption.secretKey).not.be.eql(sampleSecretKey)
+
     should(
       fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString().trim()
-    ).be.not.eql('{"store": { "provider": "fs" }}')
+    ).be.not.eql('{"store": { "provider": "fs" }, "encryption": { "secretKey": "' + sampleSecretKey + '" }}')
   })
 })
 
