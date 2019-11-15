@@ -90,6 +90,31 @@ describe('kill command', () => {
       should(stdout).containEql(`daemon process (pid: ${childInfo.pid}) killed successfully`)
     })
 
+    it('should kill once (and other calls fail) when concurrent calls are made', async () => {
+      const concurrentCalls = 5
+      const kills = []
+
+      for (let i = 0; i < concurrentCalls; i++) {
+        kills.push(
+          exec(dirName, 'kill --verbose', {
+            env: {
+              cli_socketsDirectory: localPathToSocketDir
+            }
+          }).then((result) => {
+            return { ok: result }
+          }).catch((err) => {
+            return { error: err }
+          })
+        )
+      }
+
+      const results = await Promise.all(kills)
+
+      const failed = results.filter((r) => r.error != null)
+
+      should(failed.length).be.eql(concurrentCalls - 1)
+    })
+
     it('should kill by process id', async () => {
       const { stdout } = await exec(dirName, `kill ${childInfo.pid}`, {
         env: {
