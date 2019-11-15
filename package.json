@@ -59,6 +59,7 @@
     "is-promise": "2.1.0",
     "jsreport-client": "1.0.2",
     "liftoff": "3.0.0",
+    "lockfile": "1.0.4",
     "lodash.omit": "4.5.0",
     "nanoid": "1.0.2",
     "npm-install-package": "2.1.0",
