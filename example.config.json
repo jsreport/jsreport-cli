@@ -17,10 +17,10 @@
         "timeout": 30000
     },
     "extensions": {
-        "authentication" : {
+        "authentication": {
             "cookieSession": {},
             "admin": {
-                "username" : "admin",
+                "username": "admin",
                 "password": "password"
             },
             "enabled": false
@@ -30,6 +30,9 @@
         },
         "scripts": {
             "timeout": 30000
+        },
+        "fs-store": {
+            "syncModifications": false
         }
     }
 }
