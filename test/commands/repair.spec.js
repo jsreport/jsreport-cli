@@ -36,7 +36,7 @@ describe('repair command', function () {
       cwd: fullPathToTempProject
     })
 
-    should(stdout).containEql('installing jsreport latest version')
+    should(stdout).containEql('installing jsreport the latest version')
     // should install jsreport package
     should(fs.existsSync(path.join(fullPathToTempProject, 'node_modules/jsreport'))).be.eql(true)
     // and generate default files
