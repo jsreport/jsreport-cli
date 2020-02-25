@@ -78,7 +78,7 @@ describe('win-uninstall command', function () {
     should(stdout).containEql('only works on windows platforms')
   })
 
-  it('should uninstall windows service', async () => {
+  it.skip('should uninstall windows service', async () => {
     const dirName = 'win-uninstall-packagejson-ok'
 
     const fullPathToTempProject = getTempDir(`${dirName}/project`)
