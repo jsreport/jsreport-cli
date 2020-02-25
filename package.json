@@ -1,6 +1,6 @@
 {
   "name": "jsreport-cli",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "Command line interface for jsreport",
   "main": "index.js",
   "bin": {
