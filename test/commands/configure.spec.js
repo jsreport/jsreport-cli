@@ -28,6 +28,7 @@ describe('configure command', () => {
   it('should just print configuration', async () => {
     const answers = {
       env: 'dev',
+      reportTimeout: 60000,
       secretKey: 'demo123456789012',
       serverEnabled: false,
       store: 'memory',
@@ -56,22 +57,14 @@ describe('configure command', () => {
       logger: {
         console: { transport: 'console', level: 'debug' }
       },
+      reportTimeout: 60000,
       encryption: {
         secretKey: answers.secretKey
       },
       extensions: {
         express: {
           enabled: false
-        },
-        scripts: {
-          timeout: 40000
         }
-      },
-      templatingEngines: {
-        timeout: 10000
-      },
-      chrome: {
-        timeout: 40000
       }
     })
   })
@@ -79,6 +72,7 @@ describe('configure command', () => {
   it('should generate simple configuration', async () => {
     const answers = {
       env: 'dev',
+      reportTimeout: 60000,
       secretKey: 'demo123456789012',
       serverEnabled: false,
       store: 'memory',
@@ -107,22 +101,14 @@ describe('configure command', () => {
       logger: {
         console: { transport: 'console', level: 'debug' }
       },
+      reportTimeout: 60000,
       encryption: {
         secretKey: answers.secretKey
       },
       extensions: {
         express: {
           enabled: false
-        },
-        scripts: {
-          timeout: 40000
         }
-      },
-      templatingEngines: {
-        timeout: 10000
-      },
-      chrome: {
-        timeout: 40000
       }
     }
 
@@ -135,6 +121,7 @@ describe('configure command', () => {
   it('should generate configuration with web server enabled', async () => {
     const answers = {
       env: 'dev',
+      reportTimeout: 60000,
       secretKey: 'demo123456789012',
       serverEnabled: true,
       serverProtocol: 'http',
@@ -162,6 +149,7 @@ describe('configure command', () => {
     const expectedConfig = {
       httpPort: 7500,
       allowLocalFilesAccess: true,
+      reportTimeout: 60000,
       encryption: {
         secretKey: answers.secretKey
       },
@@ -172,7 +160,6 @@ describe('configure command', () => {
           enabled: true
         },
         scripts: {
-          timeout: 40000,
           strategy: 'http-server'
         },
         'sample-template': {
@@ -185,16 +172,12 @@ describe('configure command', () => {
       blobStorage: {
         provider: 'fs'
       },
-      chrome: {
-        timeout: 40000
-      },
       logger: {
         console: { transport: 'console', level: 'debug' },
         file: { transport: 'file', level: 'info', filename: 'logs/reporter.log' },
         error: { transport: 'file', level: 'error', filename: 'logs/error.log' }
       },
       templatingEngines: {
-        timeout: 10000,
         strategy: 'http-server'
       }
     }
