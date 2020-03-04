@@ -1,38 +1,29 @@
 {
-    "httpPort": 5488,
-    "allowLocalFilesAccess": true,
-    "store": {
-        "provider": "fs"
+  "httpPort": 5488,
+  "allowLocalFilesAccess": false,
+  "store": {
+    "provider": "fs"
+  },
+  "blobStorage": {
+    "provider": "fs"
+  },
+  "encryption": {
+    "secretKey": null
+  },
+  "reportTimeout": 60000,
+  "extensions": {
+    "authentication": {
+      "admin": {
+        "username": "admin",
+        "password": "password"
+      },
+      "enabled": false
     },
-    "blobStorage": {
-        "provider": "fs"
+    "sample-template": {
+      "createSamples": true
     },
-    "encryption": {
-        "secretKey": null
-    },
-    "templatingEngines": {
-        "timeout": 10000
-    },
-    "chrome": {
-        "timeout": 30000
-    },
-    "extensions": {
-        "authentication": {
-            "cookieSession": {},
-            "admin": {
-                "username": "admin",
-                "password": "password"
-            },
-            "enabled": false
-        },
-        "sample-template": {
-            "createSamples": true
-        },
-        "scripts": {
-            "timeout": 30000
-        },
-        "fs-store": {
-            "syncModifications": false
-        }
+    "fs-store": {
+      "syncModifications": false
     }
+  }
 }
