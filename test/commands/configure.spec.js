@@ -29,7 +29,6 @@ describe('configure command', () => {
     const answers = {
       env: 'dev',
       reportTimeout: 60000,
-      secretKey: 'demo123456789012',
       serverEnabled: false,
       store: 'memory',
       allowLocalFilesAccess: false,
@@ -58,9 +57,6 @@ describe('configure command', () => {
         console: { transport: 'console', level: 'debug' }
       },
       reportTimeout: 60000,
-      encryption: {
-        secretKey: answers.secretKey
-      },
       extensions: {
         express: {
           enabled: false
@@ -73,7 +69,6 @@ describe('configure command', () => {
     const answers = {
       env: 'dev',
       reportTimeout: 60000,
-      secretKey: 'demo123456789012',
       serverEnabled: false,
       store: 'memory',
       allowLocalFilesAccess: false,
@@ -102,9 +97,6 @@ describe('configure command', () => {
         console: { transport: 'console', level: 'debug' }
       },
       reportTimeout: 60000,
-      encryption: {
-        secretKey: answers.secretKey
-      },
       extensions: {
         express: {
           enabled: false
@@ -122,12 +114,11 @@ describe('configure command', () => {
     const answers = {
       env: 'dev',
       reportTimeout: 60000,
-      secretKey: 'demo123456789012',
       serverEnabled: true,
       serverProtocol: 'http',
       serverPort: 7500,
       serverAuthEnabled: true,
-      serverAuthCookieSecret: 'secret here',
+      serverAuthCookieSecret: '<<secret  here>>',
       serverAuthUsername: 'test',
       serverAuthPassword: 'test-pass',
       store: 'fs',
@@ -150,12 +141,11 @@ describe('configure command', () => {
       httpPort: 7500,
       allowLocalFilesAccess: true,
       reportTimeout: 60000,
-      encryption: {
-        secretKey: answers.secretKey
-      },
       extensions: {
         authentication: {
-          cookieSession: {},
+          cookieSession: {
+            secret: '<<secret  here>>'
+          },
           admin: { username: 'test', password: 'test-pass' },
           enabled: true
         },
