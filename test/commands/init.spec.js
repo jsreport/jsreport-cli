@@ -46,7 +46,7 @@ describe('init command', function () {
 
     const conf = JSON.parse(fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString())
 
-    should(conf.encryption.secretKey).be.Null()
+    should(conf.encryption).be.Undefined()
   })
 
   it('should initialize with a specific jsreport version', async function () {
@@ -77,7 +77,7 @@ describe('init command', function () {
 
     const conf = JSON.parse(fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString())
 
-    should(conf.encryption.secretKey).be.Null()
+    should(conf.encryption).be.Undefined()
   })
 
   it('should initialize a directory that contains only package.json', async function () {
@@ -116,7 +116,7 @@ describe('init command', function () {
 
     const conf = JSON.parse(fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString())
 
-    should(conf.encryption.secretKey).be.Null()
+    should(conf.encryption).be.Undefined()
   })
 
   it('should not override server.js file', async function () {

@@ -46,7 +46,7 @@ describe('repair command', function () {
 
     const conf = JSON.parse(fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString())
 
-    should(conf.encryption.secretKey).be.Null()
+    should(conf.encryption).Undefined()
   })
 
   it('should work with specific jsreport version', async function () {
@@ -77,7 +77,7 @@ describe('repair command', function () {
 
     const conf = JSON.parse(fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString())
 
-    should(conf.encryption.secretKey).be.Null()
+    should(conf.encryption).be.Undefined()
   })
 
   it('should work on a directory that contains only package.json', async function () {
@@ -116,7 +116,7 @@ describe('repair command', function () {
 
     const conf = JSON.parse(fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString())
 
-    should(conf.encryption.secretKey).be.Null()
+    should(conf.encryption).be.Undefined()
   })
 
   it('should override server.js file', async function () {
@@ -160,7 +160,7 @@ describe('repair command', function () {
 
     const conf = JSON.parse(fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString())
 
-    should(conf.encryption.secretKey).be.Null()
+    should(conf.encryption).be.Undefined()
 
     // and replace server.js
     should(
@@ -210,7 +210,7 @@ describe('repair command', function () {
     // and replace jsreport.config.json
     const conf = JSON.parse(fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString())
 
-    should(conf.encryption.secretKey).be.Null()
+    should(conf.encryption).be.Undefined()
 
     should(
       fs.readFileSync(path.join(fullPathToTempProject, 'jsreport.config.json')).toString().trim()
