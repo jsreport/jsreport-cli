@@ -62,7 +62,7 @@ describe('init command', function () {
       cwd: fullPathToTempProject
     })
 
-    should(stdout).containEql(`installing jsreport@${versionToInstall} version`)
+    should(stdout).containEql(`installing jsreport@${versionToInstall} now`)
 
     // should install jsreport package
     should(fs.existsSync(path.join(fullPathToTempProject, 'node_modules/jsreport'))).be.eql(true)
